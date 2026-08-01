@@ -16,11 +16,11 @@ export default async function NewGamePage() {
 
   const venues = await getRecentVenues();
 
-  // Sensible starting point: today's date, next round hour, 90 minutes.
-  const now = new Date();
-  const { date } = utcToLondonInputs(now.toISOString());
-  const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
-  const { time } = utcToLondonInputs(nextHour.toISOString());
+  // Sensible starting point: the next round hour, 90 minutes long. Taking the
+  // date from the same instant as the time keeps it right late at night, when
+  // "an hour from now" is already tomorrow.
+  const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+  const { date, time } = utcToLondonInputs(nextHour.toISOString());
 
   return (
     <AppShell title="New game" back={{ href: "/", label: "Upcoming" }}>

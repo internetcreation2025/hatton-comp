@@ -210,6 +210,12 @@ export async function addPlayer(
 
   if (!error) return { outcome: "playing" };
 
+  // Double-tap, or two tabs at once. They're already in — nothing to do.
+  if (error.code === "23505") {
+    console.log("[games] player already in this game, ignoring");
+    return { outcome: "playing" };
+  }
+
   // The database refused because the game is full — go on the waitlist instead.
   if (error.message.includes("GAME_FULL")) {
     const waitPosition = await nextPosition(gameId, "waitlist");
@@ -217,7 +223,9 @@ export async function addPlayer(
       .from("game_players")
       .insert({ ...base, status: "waitlist", position: waitPosition });
 
-    if (waitError) throw new Error(waitError.message);
+    if (waitError && waitError.code !== "23505") {
+      throw new Error(waitError.message);
+    }
     return { outcome: "waitlist" };
   }
 
