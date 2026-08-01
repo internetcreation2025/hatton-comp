@@ -148,6 +148,17 @@ export function durationMinutes(startIso: string, endIso: string): number {
   );
 }
 
+/**
+ * What the new-game form starts on: the next round hour. Taking the date from
+ * the same instant as the time keeps it right late at night, when "an hour from
+ * now" is already tomorrow.
+ */
+export function defaultGameStart(): { date: string; time: string } {
+  const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+  const { date, time } = utcToLondonInputs(nextHour.toISOString());
+  return { date, time: `${time.slice(0, 2)}:00` };
+}
+
 /** True if the game starts within the next 24 hours (used for the leaving warning). */
 export function startsWithin24Hours(startIso: string): boolean {
   const ms = new Date(startIso).getTime() - Date.now();
