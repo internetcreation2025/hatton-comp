@@ -224,6 +224,20 @@ Kept out on purpose to get this into people's hands quickly — all straightforw
 
 ---
 
+## 9a. Where things live
+
+| Thing | Where |
+| --- | --- |
+| Live app | https://hatton-comp.vercel.app |
+| Code | https://github.com/internetcreation2025/hatton-comp (pushes to `main` deploy automatically) |
+| Database | Supabase project **HattComp** (`hijrblbefgpxdkdzcvvj`), eu-central-1 |
+| Hosting | Vercel project **hatton-comp**, team "Internet Creation's projects" |
+| Reminder cron | Vercel cron, hourly, hits `/api/cron/reminders` |
+
+The Supabase project was an unused care-home trial that has been repurposed.
+Its old empty tables (`care_homes`, `tickets`, `profiles`, etc.) are still
+there, untouched, and can be dropped whenever you like.
+
 ## 10. Decisions (confirmed 1 Aug 2026)
 
 1. **App name** — "Hatton Padel" for now.
