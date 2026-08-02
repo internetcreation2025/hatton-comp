@@ -37,8 +37,10 @@ This covers most of the app. You don't need anyone else.
 | Tap **New game** | Today's date, next round hour, 1½ hrs, Hatton |
 | Set it for tomorrow evening, tap **Create game** | The game, with you in slot 1, and a big **"Game's in. Tell the group."** panel |
 | Tap **Not now** | The panel disappears and doesn't come back on refresh |
-| Tap **Add someone who isn't in the group**, add "Test Guest" | They fill slot 2 with a "Guest" tag |
-| Add two more guests | The badge changes to **Game on**, slots all full |
+| Tap **Add a player** | A panel. Anyone in the group who isn't in this game is listed to tap; below that, a box to type a name |
+| Type "Test Guest", tap Add | They fill slot 2 with a "Guest" tag |
+| Add two more by name | The badge changes to **Game on**, slots all full |
+| Tap **Add a player** again | It warns that anyone added now goes on the waitlist |
 | Tap **Remove Test Guest** | Back to 3 players, "1 needed" |
 | Tap **Drop out** | You leave, 2 players left |
 | Tap **Count me in** | You're back, in the last slot |
@@ -72,7 +74,8 @@ Now, with your phone in one hand and the laptop in front of you:
 | On the **laptop**, create a game | Your **phone buzzes**: "New game — …" |
 | On the **phone**, tap that notification | The app opens on that exact game |
 | On the phone, tap **Count me in** | You appear in a slot on the laptop when it refreshes |
-| Fill the remaining slots with guests from the laptop | Whoever taps the last slot gets **"That's four — game on."** and both of you get a notification |
+| On the **laptop**, tap **Add a player** | Your name now appears under "From the group", because there are two of you. Tap it — you should get a **notification that they put you in a game** |
+| Fill the remaining slots by name from the laptop | Whoever fills the last slot gets **"That's four — game on."** and both of you get a notification |
 | On the **phone**, tap **Drop out** | The laptop gets "A spot has opened up", and your phone offers **"A spot's opened up. Post it."** |
 | On the laptop, tap **Count me in** twice quickly | You only go in once — no duplicate |
 

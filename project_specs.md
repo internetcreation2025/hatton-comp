@@ -80,7 +80,7 @@ Chosen approach: **group code + pick your name.**
 | Page | What's on it |
 |---|---|
 | `/` **Upcoming** | The home screen. A list of upcoming game cards, soonest first, grouped by day ("Today", "Tomorrow", "Tuesday 4 Aug"). Each card shows time, venue, and four slots with names or "empty". Big obvious "+ New game" button. |
-| `/game/[id]` **Game detail** | Full view of one game: date/time, venue, court, notes, the four slots, the waitlist, and a plain-English activity log ("Robert created this game 05:34 · Mike joined 09:12"). Buttons: Join / Leave, Add a guest, Share to WhatsApp, Edit, Cancel. |
+| `/game/[id]` **Game detail** | Full view of one game: date/time, venue, court, notes, the four slots, the waitlist, and a plain-English activity log ("Robert created this game 05:34 · Mike joined 09:12"). Buttons: Join / Leave, Add a player, Share to WhatsApp, Edit, Cancel. |
 | `/new` **Create game** | Date, start time, duration (default 90 min), venue (dropdown, remembers recent), court number (optional), notes (optional). Creator is added to slot 1 automatically, with a tick-box to opt out if they're organising but not playing. |
 | `/past` **History** | Games that have already happened, newest first. Read-only. |
 | `/me` **You** | Change your display name, turn notifications on/off, "How to add this to your home screen" instructions, sign out. |
@@ -95,7 +95,12 @@ Chosen approach: **group code + pick your name.**
 
 ### Edge cases the app must handle
 - **Two people tap the last slot at the same time.** The database enforces the four-player limit, so the second person is told "Sorry, that filled up — you're first on the waitlist" rather than creating a 5-player game.
-- **Guests.** Someone playing who isn't in the WhatsApp group can be added by name only ("+ Add guest → Dave from work"), occupying a slot without needing an account.
+- **Adding other people.** "Add a player" lists everyone in the group who isn't
+  already in the game — tap a name to put them in, and they're notified. The same
+  panel takes a typed name for someone outside the group ("Dave from work"), who
+  occupies a slot without needing an account. **Anyone can add anyone**, because
+  the chat habit is "put me down for Tuesday" and whoever reads it first should
+  be able to act. Every add is stamped with who did it.
 - **Dropping out.** Always allowed, but if it's within 24 hours of the game the app shows a gentle confirm: *"This game is tomorrow — the others will be notified. Still leaving?"*
 - **Cancelled games.** Never deleted — marked cancelled, greyed out, and everyone in the game is notified.
 - **Past games** auto-move out of Upcoming once the end time passes. No manual tidying.
