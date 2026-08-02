@@ -2,8 +2,10 @@
 
 /*
   Colours are taken from the Hatton Sports Club logo: navy and the yellow ball.
-  Dark is the default (most of this happens in the evening); light mode follows
-  the phone's own setting.
+
+  Light is the default. Dark is opt-in from the You page, remembered in a
+  cookie, and applied by the server via data-theme on <html> — so the app opens
+  in the right colours straight away, with no white flash.
 */
 
 :root {
@@ -19,19 +21,17 @@
   --danger: #b42318;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #080d1c;
-    --surface: #111834;
-    --surface-2: #172041;
-    --border: #253060;
-    --text: #eef1fa;
-    --text-muted: #94a0c4;
-    --accent: #f5c33b;
-    --accent-text: #101836;
-    --ball: #f5c33b;
-    --danger: #ff6b5e;
-  }
+:root[data-theme="dark"] {
+  --bg: #080d1c;
+  --surface: #111834;
+  --surface-2: #172041;
+  --border: #253060;
+  --text: #eef1fa;
+  --text-muted: #94a0c4;
+  --accent: #f5c33b;
+  --accent-text: #101836;
+  --ball: #f5c33b;
+  --danger: #ff6b5e;
 }
 
 @theme inline {
@@ -91,10 +91,16 @@ body {
   }
 }
 
-/* Native date/time pickers are unreadable in dark mode without this. */
-@media (prefers-color-scheme: dark) {
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.6);
-  }
+/* Native date and time pickers are unreadable on a dark field without this. */
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+:root[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+}
+
+/* Keep the native picker panels in step with the chosen theme. */
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }

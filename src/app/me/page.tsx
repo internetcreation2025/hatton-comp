@@ -1,11 +1,14 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import AppShell from "@/components/AppShell";
 import Avatar from "@/components/Avatar";
 import NotificationsToggle from "@/components/NotificationsToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import NameForm from "./NameForm";
 import { signOut } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
+import { THEME_COOKIE, readTheme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "You · Hatton Padel" };
@@ -33,6 +36,8 @@ export default async function MePage() {
   const member = await getCurrentMember();
   if (!member) redirect("/join");
 
+  const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
     <AppShell title="You">
       <div className="flex flex-col gap-6">
@@ -53,6 +58,10 @@ export default async function MePage() {
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
             This is what the group sees on every game.
           </p>
+        </Section>
+
+        <Section title="Appearance">
+          <ThemeToggle current={theme} />
         </Section>
 
         <Section title="Notifications">

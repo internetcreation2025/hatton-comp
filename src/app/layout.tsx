@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { THEME_COLOUR, THEME_COOKIE, readTheme } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,29 +16,38 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Hatton Padel",
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
   // It's a private group app — keep it out of search results.
   robots: { index: false, follow: false },
 };
 
+// No themeColor here on purpose — it's emitted per-request in <head> below so
+// it can follow the chosen theme, and two theme-color tags would conflict.
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#080d1c" },
-  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read the saved preference on the server so the page arrives in the right
+  // colours — no flash of the wrong theme on the way in.
+  const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
-    <html lang="en-GB" className={`${geistSans.variable} h-full antialiased`}>
+    <html
+      lang="en-GB"
+      data-theme={theme}
+      className={`${geistSans.variable} h-full antialiased`}
+    >
+      <head>
+        <meta name="theme-color" content={THEME_COLOUR[theme]} />
+      </head>
       <body className="font-sans min-h-full flex flex-col bg-bg text-ink">
         {children}
       </body>
