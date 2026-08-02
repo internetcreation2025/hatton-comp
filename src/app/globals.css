@@ -19,6 +19,9 @@
   --accent-text: #ffffff;
   --ball: #d9a413;
   --danger: #b42318;
+  --success: #1a7f4b;
+  --whatsapp: #25d366;
+  --destructive: #d92d20;
 }
 
 :root[data-theme="dark"] {
@@ -32,6 +35,9 @@
   --accent-text: #101836;
   --ball: #f5c33b;
   --danger: #ff6b5e;
+  --success: #35c07a;
+  --whatsapp: #25d366;
+  --destructive: #e8483c;
 }
 
 @theme inline {
@@ -45,6 +51,9 @@
   --color-accent-ink: var(--accent-text);
   --color-ball: var(--ball);
   --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-whatsapp: var(--whatsapp);
+  --color-destructive: var(--destructive);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

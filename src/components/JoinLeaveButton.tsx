@@ -18,12 +18,14 @@ function Button({ state, full }: { state: State; full: boolean }) {
           ? "Join the waitlist"
           : "Count me in";
 
+  // Leaving is the one destructive thing here, so it's tinted red — enough to
+  // give pause, not enough to shout.
   const style =
     state === "out"
       ? full
         ? "border border-line text-ink"
         : "bg-accent text-accent-ink"
-      : "border border-line text-muted";
+      : "border border-danger/40 bg-danger/10 text-danger";
 
   return (
     <button

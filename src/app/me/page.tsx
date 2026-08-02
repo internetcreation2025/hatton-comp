@@ -11,7 +11,7 @@ import { getCurrentMember } from "@/lib/auth";
 import { THEME_COOKIE, readTheme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "You · Hatton Competitors" };
+export const metadata = { title: "Settings · Hatton Competitors" };
 
 function Section({
   title,
@@ -39,7 +39,7 @@ export default async function MePage() {
   const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
 
   return (
-    <AppShell title="You">
+    <AppShell title="Settings">
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <Avatar name={member.display_name} colour={member.colour} size={52} />

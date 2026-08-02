@@ -87,9 +87,9 @@ export default function AddPlayers({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-xl border border-line px-4 py-3 text-[15px] font-semibold text-ink"
+        className="w-full rounded-xl border border-success/40 bg-success/10 px-4 py-3.5 text-[16px] font-semibold text-success"
       >
-        Add a player
+        {full ? "Add a player to the waitlist" : "Add a player"}
       </button>
     );
   }

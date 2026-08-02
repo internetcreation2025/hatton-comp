@@ -1,5 +1,5 @@
 /**
- * Service worker.
+ * Service worker. Version 2.
  *
  * Two jobs only: receive push notifications, and open the right game when one
  * is tapped. Deliberately no offline caching — a stale games list would be
@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) =>
 );
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Hatton Padel", body: "", url: "/" };
+  let payload = { title: "Hatton Competitors", body: "", url: "/" };
 
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
@@ -35,20 +35,43 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/";
+
+  // Make it absolute. A relative path works for openWindow but not reliably
+  // for navigate(), and getting this wrong is why taps used to land on the
+  // games list instead of the game.
+  const target = new URL(
+    event.notification.data?.url || "/",
+    self.location.origin,
+  ).href;
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
-        // If the app is already open, jump to the game in that window.
-        for (const client of clients) {
-          if ("focus" in client) {
-            client.navigate(target);
-            return client.focus();
+    (async () => {
+      const windows = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // Already looking at it — just bring it forward.
+      for (const client of windows) {
+        if (client.url === target && "focus" in client) {
+          return client.focus();
+        }
+      }
+
+      // Otherwise steer an open window to the game. navigate() isn't supported
+      // everywhere and can reject, so treat failure as "open a new one".
+      for (const client of windows) {
+        if ("navigate" in client && "focus" in client) {
+          try {
+            const navigated = await client.navigate(target);
+            return (navigated || client).focus();
+          } catch {
+            // fall through to opening a window
           }
         }
-        return self.clients.openWindow(target);
-      }),
+      }
+
+      return self.clients.openWindow(target);
+    })(),
   );
 });

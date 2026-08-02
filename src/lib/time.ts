@@ -159,6 +159,76 @@ export function defaultGameStart(): { date: string; time: string } {
   return { date, time: `${time.slice(0, 2)}:00` };
 }
 
+/** "2026-08" for the London month a given instant falls in. */
+export function londonMonthKey(iso: string): string {
+  return londonDateKey(iso).slice(0, 7);
+}
+
+/** The month containing today, in London. */
+export function currentLondonMonth(): string {
+  return londonMonthKey(new Date().toISOString());
+}
+
+/** Step a "2026-08" month key forwards or backwards. */
+export function shiftMonth(monthKey: string, by: number): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1 + by, 1));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** "August 2026" */
+export function formatMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+/**
+ * The UTC instants a London month starts and ends. Used to fetch exactly the
+ * games that belong on one calendar page.
+ */
+export function londonMonthRange(monthKey: string): { from: string; to: string } {
+  return {
+    from: londonToUtc(`${monthKey}-01`, "00:00").toISOString(),
+    to: londonToUtc(`${shiftMonth(monthKey, 1)}-01`, "00:00").toISOString(),
+  };
+}
+
+/**
+ * The calendar grid for a month: whole weeks, Monday first, with days from the
+ * neighbouring months included so the grid is rectangular.
+ */
+export function monthGrid(monthKey: string): string[] {
+  const [year, month] = monthKey.split("-").map(Number);
+  const first = Date.UTC(year, month - 1, 1);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  // getUTCDay is 0 for Sunday; we want Monday at the start of the week.
+  const lead = (new Date(first).getUTCDay() + 6) % 7;
+  const cells = Math.ceil((lead + daysInMonth) / 7) * 7;
+
+  const start = first - lead * 24 * 60 * 60 * 1000;
+
+  return Array.from({ length: cells }, (_, i) => {
+    const day = new Date(start + i * 24 * 60 * 60 * 1000);
+    return `${day.getUTCFullYear()}-${String(day.getUTCMonth() + 1).padStart(2, "0")}-${String(day.getUTCDate()).padStart(2, "0")}`;
+  });
+}
+
+/** "Tuesday 4 August" from a "2026-08-04" key. */
+export function formatDateKeyLong(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 /** True if the game starts within the next 24 hours (used for the leaving warning). */
 export function startsWithin24Hours(startIso: string): boolean {
   const ms = new Date(startIso).getTime() - Date.now();

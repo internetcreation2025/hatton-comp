@@ -22,7 +22,7 @@ import {
 import { notifyEveryone, notifyMembers } from "@/lib/push";
 import { safeNext } from "@/lib/next-url";
 import { formatShortDate, formatTime, londonToUtc } from "@/lib/time";
-import type { Member } from "@/lib/types";
+import type { GameWithPlayers, Member } from "@/lib/types";
 
 export type FormState = {
   error?: string;
@@ -357,6 +357,23 @@ export async function cancelGame(formData: FormData): Promise<void> {
 /* Joining and leaving games                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Tell everyone already involved in a game that the line-up changed — except
+ * whoever made the change, who is looking at it, and anyone named separately.
+ */
+async function notifyOthersInGame(
+  game: GameWithPlayers,
+  exclude: (string | null)[],
+  payload: { title: string; body: string },
+): Promise<void> {
+  const skip = new Set(exclude.filter(Boolean));
+  const audience = [...game.players, ...game.waitlist]
+    .map((p) => p.member_id)
+    .filter((id): id is string => Boolean(id) && !skip.has(id));
+
+  await notifyMembers(audience, { ...payload, url: `/game/${game.id}` });
+}
+
 export async function joinGame(formData: FormData): Promise<void> {
   console.log("[joinGame] start");
   const member = await requireMember();
@@ -428,14 +445,21 @@ export async function leaveGame(formData: FormData): Promise<void> {
         body: `A spot opened up — ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
         url: `/game/${gameId}`,
       });
-    } else {
-      const remaining = await getGame(gameId);
-      await notifyMembers(remaining?.players.map((p) => p.member_id) ?? [], {
-        title: "A spot has opened up",
-        body: `${member.display_name} dropped out of ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
-        url: `/game/${gameId}`,
-      });
     }
+
+    await notifyOthersInGame(
+      game,
+      [member.id, promoted?.member_id ?? null],
+      promoted
+        ? {
+            title: `${member.display_name} is out`,
+            body: `${promoted.name} moves up into the spot for ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)}.`,
+          }
+        : {
+            title: "A spot has opened up",
+            body: `${member.display_name} dropped out of ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+          },
+    );
   }
 
   console.log("[leaveGame] done");
@@ -474,6 +498,11 @@ export async function addGuest(
     "guest_added",
     `${member.display_name} added ${guestName}${outcome === "waitlist" ? " to the waitlist" : ""}`,
   );
+
+  await notifyOthersInGame(game, [member.id], {
+    title: `${guestName} is in`,
+    body: `${member.display_name} added them to ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+  });
 
   console.log("[addGuest] done —", outcome);
   revalidatePath(`/game/${gameId}`);
@@ -528,6 +557,12 @@ export async function addMemberToGame(formData: FormData): Promise<void> {
       url: `/game/${gameId}`,
     });
   }
+
+  // And everyone already in it should know who they're playing with.
+  await notifyOthersInGame(game, [actor.id, memberId], {
+    title: `${target.display_name} is in`,
+    body: `${actor.display_name} added them to ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+  });
 
   if (outcome === "playing" && game.spotsLeft === 1) {
     const updated = await getGame(gameId);
@@ -586,6 +621,18 @@ export async function removePlayerFromGame(formData: FormData): Promise<void> {
       url: `/game/${gameId}`,
     });
   }
+
+  // Everyone left in the game should know the line-up changed.
+  await notifyOthersInGame(
+    game,
+    [member.id, target.member_id, promoted?.member_id ?? null],
+    {
+      title: `${target.name} is out`,
+      body: promoted
+        ? `${promoted.name} moves up into the spot for ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)}.`
+        : `${member.display_name} took them out of ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+    },
+  );
 
   console.log("[removePlayerFromGame] done");
   revalidatePath("/");

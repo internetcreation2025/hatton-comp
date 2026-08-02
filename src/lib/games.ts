@@ -88,6 +88,22 @@ export async function getPastGames(limit = 50): Promise<GameWithPlayers[]> {
   return withPlayers(data as Game[]);
 }
 
+/** Every game in one London calendar month — the calendar page's data. */
+export async function getGamesInRange(
+  from: string,
+  to: string,
+): Promise<GameWithPlayers[]> {
+  const { data, error } = await db()
+    .from("games")
+    .select("*")
+    .gte("starts_at", from)
+    .lt("starts_at", to)
+    .order("starts_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return withPlayers(data as Game[]);
+}
+
 export async function getGame(id: string): Promise<GameWithPlayers | null> {
   const { data, error } = await db()
     .from("games")

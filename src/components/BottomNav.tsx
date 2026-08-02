@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/", label: "Games", match: (p: string) => p === "/" },
   { href: "/new", label: "New", match: (p: string) => p === "/new" },
-  { href: "/past", label: "History", match: (p: string) => p === "/past" },
-  { href: "/me", label: "You", match: (p: string) => p === "/me" },
+  { href: "/past", label: "Calendar", match: (p: string) => p === "/past" },
+  { href: "/me", label: "Settings", match: (p: string) => p === "/me" },
 ];
 
 function Icon({ name, active }: { name: string; active: boolean }) {
@@ -36,11 +36,13 @@ function Icon({ name, active }: { name: string; active: boolean }) {
         <path d="M12 8.5v7M8.5 12h7" />
       </svg>
     );
-  if (name === "History")
+  if (name === "Calendar")
     return (
       <svg {...common}>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 7.5V12l3 1.8" />
+        <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+        <path d="M3.5 10h17M8 3v4M16 3v4" />
+        <circle cx="8.5" cy="14" r="1" fill={common.stroke} stroke="none" />
+        <circle cx="15.5" cy="14" r="1" fill={common.stroke} stroke="none" />
       </svg>
     );
   return (

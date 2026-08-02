@@ -9,7 +9,7 @@ function Button() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-xl border border-danger/40 px-4 py-3 text-[15px] font-semibold text-danger disabled:opacity-60"
+      className="w-full rounded-xl bg-destructive px-4 py-3.5 text-[16px] font-semibold text-white disabled:opacity-60"
     >
       {pending ? "…" : "Cancel this game"}
     </button>

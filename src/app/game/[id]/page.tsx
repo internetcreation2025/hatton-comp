@@ -145,7 +145,7 @@ export default async function GamePage({ params, searchParams }: Props) {
       title={formatDayLabel(game.starts_at)}
       back={{
         href: finished ? "/past" : "/",
-        label: finished ? "History" : "Upcoming",
+        label: finished ? "Calendar" : "Upcoming",
       }}
       action={
         canManage && !cancelled && !finished ? (
@@ -282,9 +282,30 @@ export default async function GamePage({ params, searchParams }: Props) {
               candidates={candidates}
               full={game.spotsLeft === 0}
             />
-            {!occasion && (
-              <ShareButton message={shareMessage(game)} gameId={game.id} />
-            )}
+            <ShareButton message={shareMessage(game)} gameId={game.id} />
+          </section>
+        )}
+
+        {/* Sits above the activity log so it can be found without scrolling
+            past it, but below the everyday actions so it isn't mis-tapped. */}
+        {canManage && !cancelled && !finished && (
+          <section>
+            <h2 className="mb-2.5 px-0.5 text-[13px] font-semibold uppercase tracking-wider text-muted">
+              Organiser
+            </h2>
+            <div className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-4">
+              <Link
+                href={`/game/${game.id}/edit`}
+                className="w-full rounded-xl border border-line px-4 py-3 text-center text-[15px] font-semibold"
+              >
+                Edit date, time or venue
+              </Link>
+              <CancelGameButton gameId={game.id} />
+              <p className="text-center text-[13px] leading-relaxed text-muted">
+                Cancelling tells everyone in the game. It stays on the list,
+                struck through, so nobody turns up.
+              </p>
+            </div>
           </section>
         )}
 
@@ -309,12 +330,6 @@ export default async function GamePage({ params, searchParams }: Props) {
             )}
           </ol>
         </section>
-
-        {canManage && !cancelled && !finished && (
-          <section className="pt-2">
-            <CancelGameButton gameId={game.id} />
-          </section>
-        )}
 
         {finished && !cancelled && (
           <p className="text-center text-[14px] text-muted">
