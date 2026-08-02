@@ -94,7 +94,8 @@ export default async function Image({
           <div
             style={{
               marginTop: 28,
-              fontSize: 76,
+              // Sized so a full date and time range stays on one line.
+              fontSize: 58,
               fontWeight: 700,
               color: cancelled ? MUTED : INK,
               textDecoration: cancelled ? "line-through" : "none",
