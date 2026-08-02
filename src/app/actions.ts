@@ -22,6 +22,7 @@ import {
 import { notifyEveryone, notifyMembers } from "@/lib/push";
 import { safeNext } from "@/lib/next-url";
 import { formatShortDate, formatTime, londonToUtc } from "@/lib/time";
+import { looksLikeAPhoneNumber, tidyPhone } from "@/lib/phone";
 import type { GameWithPlayers, Member } from "@/lib/types";
 
 export type FormState = {
@@ -145,6 +146,64 @@ export async function updateName(
   }
 
   revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
+ * Save a mobile number for the players directory.
+ *
+ * You can always edit your own. Organisers can edit anyone's, so the directory
+ * can be filled in from their WhatsApp contacts rather than sitting empty
+ * waiting for two dozen people to do admin.
+ */
+export async function savePhone(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  console.log("[savePhone] start");
+  const actor = await requireMember();
+
+  const targetId = String(formData.get("memberId") ?? actor.id);
+  if (targetId !== actor.id && !actor.is_admin) {
+    return { error: "Only an organiser can change someone else's number." };
+  }
+
+  const raw = String(formData.get("phone") ?? "");
+  const phone = tidyPhone(raw);
+
+  if (phone.length === 0) {
+    const { error } = await db()
+      .from("members")
+      .update({ phone: null })
+      .eq("id", targetId);
+
+    if (error) {
+      console.error("[savePhone] clear failed", error.message);
+      return { error: "Couldn't save that. Please try again." };
+    }
+
+    revalidatePath("/players");
+    revalidatePath("/me");
+    return { ok: true };
+  }
+
+  if (!looksLikeAPhoneNumber(phone)) {
+    return { error: "That doesn't look like a phone number." };
+  }
+
+  const { error } = await db()
+    .from("members")
+    .update({ phone })
+    .eq("id", targetId);
+
+  if (error) {
+    console.error("[savePhone] failed", error.message);
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  console.log("[savePhone] done");
+  revalidatePath("/players");
+  revalidatePath("/me");
   return { ok: true };
 }
 

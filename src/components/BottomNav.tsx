@@ -7,6 +7,7 @@ const TABS = [
   { href: "/", label: "Games", match: (p: string) => p === "/" },
   { href: "/new", label: "New", match: (p: string) => p === "/new" },
   { href: "/past", label: "Calendar", match: (p: string) => p === "/past" },
+  { href: "/players", label: "Players", match: (p: string) => p === "/players" },
   { href: "/me", label: "Settings", match: (p: string) => p === "/me" },
 ];
 
@@ -45,10 +46,18 @@ function Icon({ name, active }: { name: string; active: boolean }) {
         <circle cx="15.5" cy="14" r="1" fill={common.stroke} stroke="none" />
       </svg>
     );
+  if (name === "Players")
+    return (
+      <svg {...common}>
+        <circle cx="9" cy="8.5" r="3.2" />
+        <path d="M2.5 19.5c0-3.3 2.9-5 6.5-5s6.5 1.7 6.5 5" />
+        <path d="M16.5 6.2a3.2 3.2 0 0 1 0 6M18 14.9c2.1.5 3.5 1.9 3.5 4.6" />
+      </svg>
+    );
   return (
     <svg {...common}>
-      <circle cx="12" cy="8.5" r="3.5" />
-      <path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5" />
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 14.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.4l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.4-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.6v-.2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.6 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z" />
     </svg>
   );
 }
@@ -57,7 +66,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-bottom sticky bottom-0 z-20 border-t border-line bg-surface/95 px-2 pt-1.5 backdrop-blur">
+    <nav className="safe-bottom sticky bottom-0 z-20 border-t border-line bg-surface/95 px-1 pt-1.5 backdrop-blur">
       <ul className="mx-auto flex max-w-lg">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
@@ -70,7 +79,7 @@ export default function BottomNav() {
               >
                 <Icon name={tab.label} active={active} />
                 <span
-                  className={`text-[11px] font-medium ${
+                  className={`text-[10px] font-medium ${
                     active ? "text-accent" : "text-muted"
                   }`}
                 >

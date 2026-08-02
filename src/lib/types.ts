@@ -3,6 +3,8 @@ export type Member = {
   display_name: string;
   colour: string;
   is_admin: boolean;
+  /** Optional mobile number, for the players directory. */
+  phone: string | null;
   created_at: string;
   last_seen_at: string;
 };

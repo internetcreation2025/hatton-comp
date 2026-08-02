@@ -6,6 +6,7 @@ import Avatar from "@/components/Avatar";
 import NotificationsToggle from "@/components/NotificationsToggle";
 import ThemeToggle from "@/components/ThemeToggle";
 import NameForm from "./NameForm";
+import PhoneForm from "./PhoneForm";
 import { signOut } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
 import { THEME_COOKIE, readTheme } from "@/lib/theme";
@@ -58,6 +59,10 @@ export default async function MePage() {
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
             This is what the group sees on every game.
           </p>
+        </Section>
+
+        <Section title="Your mobile number">
+          <PhoneForm memberId={member.id} phone={member.phone} />
         </Section>
 
         <Section title="Appearance">
