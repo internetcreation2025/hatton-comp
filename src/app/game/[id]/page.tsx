@@ -197,8 +197,8 @@ export default async function GamePage({
               full={game.spotsLeft === 0}
               startsAt={game.starts_at}
             />
-            <ShareButton summary={shareSummary(game)} gameId={game.id} />
             <AddGuestForm gameId={game.id} />
+            <ShareButton summary={shareSummary(game)} gameId={game.id} />
           </section>
         )}
 

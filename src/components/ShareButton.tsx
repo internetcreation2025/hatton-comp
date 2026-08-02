@@ -3,12 +3,12 @@
 import { useState } from "react";
 
 /**
- * Posts a tidy summary of the game into WhatsApp.
+ * Posts a summary of the game into WhatsApp.
  *
- * This goes straight to WhatsApp rather than the phone's generic share sheet,
- * so it's one tap to the chat list with "Hatton competitors" sitting at the
- * top. WhatsApp gives no way to pre-select a group — the picker is theirs, not
- * ours — so that final tap can't be removed by any app.
+ * Deliberately a small link rather than a button: the app's own notifications
+ * are the noticeboard now, and this is the occasional extra nudge. It opens
+ * WhatsApp directly, but WhatsApp gives no way to pre-select a group, so
+ * choosing the chat is always the sender's tap to make.
  */
 export default function ShareButton({
   summary,
@@ -23,7 +23,6 @@ export default function ShareButton({
     const link = `${window.location.origin}/game/${gameId}`;
     const message = `${summary}\n${link}`;
 
-    // Opens the WhatsApp app on a phone, WhatsApp Web on a computer.
     const opened = window.open(
       `https://wa.me/?text=${encodeURIComponent(message)}`,
       "_blank",
@@ -43,17 +42,12 @@ export default function ShareButton({
   }
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={post}
-        className="w-full rounded-xl border border-line px-4 py-3 text-[15px] font-semibold text-ink"
-      >
-        {copied ? "Copied — paste it into the group" : "Post to WhatsApp"}
-      </button>
-      <p className="mt-1.5 text-center text-[13px] text-muted">
-        Opens WhatsApp with the message ready. Pick Hatton competitors.
-      </p>
-    </div>
+    <button
+      type="button"
+      onClick={post}
+      className="mx-auto flex items-center gap-1.5 py-1 text-[14px] font-medium text-muted underline underline-offset-4"
+    >
+      {copied ? "Copied — paste it into the group" : "Also post to WhatsApp"}
+    </button>
   );
 }

@@ -152,6 +152,31 @@ Constraint: a member can only appear once per game. The four-player cap is enfor
 
 ---
 
+## 5a. WhatsApp — what is and isn't possible (decided 2 Aug 2026)
+
+The original hope was that the app would post straight into the "Hatton
+competitors" group with no chat picker. **WhatsApp does not allow this**, and
+not because of anything in this app:
+
+- `wa.me` links open WhatsApp with the message written, but the chat picker is
+  WhatsApp's and cannot be pre-filled with a group.
+- Group invite links (`chat.whatsapp.com/…`) let people *join* a group. They
+  provide no way to *post* to one.
+- The official WhatsApp Business API does not support ordinary consumer group
+  chats at all, so paying for it would not help.
+- Unofficial libraries that drive WhatsApp Web can fake it, but they breach
+  WhatsApp's terms and risk the account being banned. Not worth it for this.
+
+**The decision:** the app's own push notifications are the noticeboard — they
+genuinely are instant and automatic. "Also post to WhatsApp" is a small link on
+each game for the occasional extra nudge, not the main channel. A prompt appears
+on the games list for anyone who hasn't switched notifications on yet, and can
+be dismissed for good.
+
+**Who gets in:** the app cannot check WhatsApp group membership either. In
+practice the app link and the group code live in the WhatsApp group's
+description, which only members can read.
+
 ## 6. Notifications — how they actually work
 
 - Uses the **Web Push** standard, which is free. No SMS, no email.

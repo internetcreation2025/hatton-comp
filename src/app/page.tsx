@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import AppShell from "@/components/AppShell";
 import GameCard from "@/components/GameCard";
+import NotificationsNudge from "@/components/NotificationsNudge";
 import { getCurrentMember, touchMember } from "@/lib/auth";
 import { getUpcomingGames } from "@/lib/games";
 import { formatDayLabel, londonDateKey } from "@/lib/time";
@@ -37,6 +38,8 @@ export default async function UpcomingPage() {
         </Link>
       }
     >
+      <NotificationsNudge />
+
       {games.length === 0 ? (
         <div className="mt-16 text-center">
           <p className="text-[17px] font-medium">Nothing booked in</p>
