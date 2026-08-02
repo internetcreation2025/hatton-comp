@@ -82,7 +82,8 @@ Chosen approach: **group code + pick your name.**
 | `/` **Upcoming** | The home screen. A list of upcoming game cards, soonest first, grouped by day ("Today", "Tomorrow", "Tuesday 4 Aug"). Each card shows time, venue, and four slots with names or "empty". Big obvious "+ New game" button. |
 | `/game/[id]` **Game detail** | Full view of one game: date/time, venue, court, notes, the four slots, the waitlist, and a plain-English activity log ("Robert created this game 05:34 · Mike joined 09:12"). Buttons: Join / Leave, Add a player, Share to WhatsApp, Edit, Cancel. |
 | `/new` **Create game** | Date, start time, duration (default 90 min), venue (dropdown, remembers recent), court number (optional), notes (optional). Creator is added to slot 1 automatically, with a tick-box to opt out if they're organising but not playing. |
-| `/past` **History** | Games that have already happened, newest first. Read-only. |
+| `/past` **Calendar** | A month grid with the days that have games highlighted. Tap a day to see what was on. Read-only. |
+| `/players` **Players** | Everyone in the group, with their mobile number if they've given one, how many games they've played, and buttons to WhatsApp or call them. Organisers see extra controls on each row: make organiser, and remove from the group. |
 | `/me` **You** | Change your display name, turn notifications on/off, "How to add this to your home screen" instructions, sign out. |
 
 ### Core flow: create → fill → play
@@ -122,8 +123,31 @@ All tables live in Supabase Postgres with RLS enabled and no public policies.
 | id | uuid, PK | |
 | display_name | text | e.g. "Mike Sutherland" |
 | colour | text | auto-assigned, for their initials avatar |
-| is_admin | boolean | default false, set by hand |
+| is_admin | boolean | default false; granted by another organiser from the Players page |
+| phone | text, nullable | optional mobile, asked for on join, shown on the Players page |
+| removed_at | timestamptz, nullable | set when an organiser removes them; the row stays so past games keep the name |
+| removed_by | uuid, nullable | which organiser did it |
 | created_at / last_seen_at | timestamptz | |
+
+**Organisers and removing people**
+
+An organiser can edit or cancel any game, fill in anyone's number, remove
+somebody from the group, and make other organisers. Rules:
+
+- You can't change your own organiser rights, so the group can never end up with
+  nobody able to manage it. To step down, make someone else an organiser and ask
+  them to take yours away.
+- An organiser has to be stood down before they can be removed — two deliberate
+  steps rather than one tap.
+- Removing somebody is a soft delete, in line with "nothing is hard-deleted".
+  They leave the Players page and the "add a player" search, they're taken out
+  of any game still to come (promoting whoever is next on the waitlist), their
+  push subscriptions are deleted, and their phone is signed out on the next
+  request. Games they have already played are untouched and still show their
+  name.
+- Removal is tidying the list, not a ban. Somebody who still has the group code
+  can join again under the same name, which restores their history rather than
+  creating a duplicate.
 
 **`games`** — one row per game
 | Column | Type | Notes |
