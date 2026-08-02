@@ -3,8 +3,12 @@
 import { useState } from "react";
 
 /**
- * Drops a tidy summary of the game into WhatsApp. The app is the source of
- * truth; WhatsApp is still where people get shouted at.
+ * Posts a tidy summary of the game into WhatsApp.
+ *
+ * This goes straight to WhatsApp rather than the phone's generic share sheet,
+ * so it's one tap to the chat list with "Hatton competitors" sitting at the
+ * top. WhatsApp gives no way to pre-select a group — the picker is theirs, not
+ * ours — so that final tap can't be removed by any app.
  */
 export default function ShareButton({
   summary,
@@ -15,44 +19,41 @@ export default function ShareButton({
 }) {
   const [copied, setCopied] = useState(false);
 
-  function buildMessage() {
+  function post() {
     const link = `${window.location.origin}/game/${gameId}`;
-    return `${summary}\n${link}`;
-  }
+    const message = `${summary}\n${link}`;
 
-  async function share() {
-    const message = buildMessage();
+    // Opens the WhatsApp app on a phone, WhatsApp Web on a computer.
+    const opened = window.open(
+      `https://wa.me/?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
 
-    // Phones get the proper share sheet; desktop falls back to a copy.
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: message });
-        return;
-      } catch {
-        // User dismissed the share sheet — nothing to do.
-        return;
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      window.open(
-        `https://wa.me/?text=${encodeURIComponent(message)}`,
-        "_blank",
+    // Blocked by a pop-up blocker — fall back to the clipboard.
+    if (!opened) {
+      navigator.clipboard?.writeText(message).then(
+        () => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        },
+        () => undefined,
       );
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={share}
-      className="w-full rounded-xl border border-line px-4 py-3 text-[15px] font-semibold text-ink"
-    >
-      {copied ? "Copied — paste it into the group" : "Share to WhatsApp"}
-    </button>
+    <div>
+      <button
+        type="button"
+        onClick={post}
+        className="w-full rounded-xl border border-line px-4 py-3 text-[15px] font-semibold text-ink"
+      >
+        {copied ? "Copied — paste it into the group" : "Post to WhatsApp"}
+      </button>
+      <p className="mt-1.5 text-center text-[13px] text-muted">
+        Opens WhatsApp with the message ready. Pick Hatton competitors.
+      </p>
+    </div>
   );
 }
