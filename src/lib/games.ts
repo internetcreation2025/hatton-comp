@@ -201,7 +201,9 @@ export async function findHattonClash(
  */
 export async function getMembersNotInGame(gameId: string): Promise<Member[]> {
   const [membersResult, playersResult] = await Promise.all([
-    db().from("members").select("*").order("display_name"),
+    // Most recently active first, so the regulars are the ones you see before
+    // typing anything.
+    db().from("members").select("*").order("last_seen_at", { ascending: false }),
     db().from("game_players").select("member_id").eq("game_id", gameId),
   ]);
 
