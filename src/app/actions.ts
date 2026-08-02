@@ -24,7 +24,12 @@ import { safeNext } from "@/lib/next-url";
 import { formatShortDate, formatTime, londonToUtc } from "@/lib/time";
 import type { Member } from "@/lib/types";
 
-export type FormState = { error?: string; ok?: boolean };
+export type FormState = {
+  error?: string;
+  ok?: boolean;
+  /** Set when the name typed is already in the group and we need to check. */
+  clash?: string;
+};
 
 /* -------------------------------------------------------------------------- */
 /* Joining the group                                                          */
@@ -49,8 +54,6 @@ export async function joinGroup(
     return { error: "That name is too long." };
   }
 
-  // Picking a name that already exists means "that's me" — this is how someone
-  // signs in again on a new phone.
   const { data: existing, error: lookupError } = await db()
     .from("members")
     .select("*")
@@ -63,6 +66,14 @@ export async function joinGroup(
   }
 
   let member = existing as Member | null;
+
+  // Picking a name that already exists usually means "that's me" on a new
+  // phone — but it could equally be a second Neil. Signing them into someone
+  // else's account by accident is the worst outcome, so ask.
+  if (member && formData.get("confirm") !== "yes") {
+    console.log("[joinGroup] name already in the group —", member.display_name);
+    return { clash: member.display_name };
+  }
 
   if (!member) {
     const { count } = await db()
@@ -78,6 +89,13 @@ export async function joinGroup(
       .single();
 
     if (createError) {
+      // Someone with that name registered a moment ago.
+      if (createError.code === "23505") {
+        return {
+          error:
+            "Someone just joined with that name. Add your surname or an initial and try again.",
+        };
+      }
       console.error("[joinGroup] create failed", createError.message);
       return { error: "Something went wrong. Please try again." };
     }
