@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 /**
@@ -152,20 +153,14 @@ export default function NotificationsToggle() {
         <p className="font-medium">Add the app to your Home Screen first</p>
         <p className="mt-1 text-muted">
           iPhones only allow notifications once the app is installed. It takes
-          about ten seconds:
+          about ten seconds — then come back here and the switch will be waiting.
         </p>
-        <ol className="mt-3 flex list-decimal flex-col gap-1.5 pl-5 text-muted">
-          <li>
-            Tap the <span className="text-ink">Share</span> button at the bottom
-            of Safari (the square with an arrow coming out of it).
-          </li>
-          <li>
-            Scroll down and tap{" "}
-            <span className="text-ink">Add to Home Screen</span>.
-          </li>
-          <li>Tap Add, then open Hatton Competitors from your Home Screen.</li>
-          <li>Come back to this page and the switch will be here.</li>
-        </ol>
+        <Link
+          href="/install"
+          className="mt-3 block rounded-xl bg-accent px-4 py-3.5 text-center text-[15px] font-semibold text-accent-ink"
+        >
+          Show me how
+        </Link>
       </div>
     );
   }

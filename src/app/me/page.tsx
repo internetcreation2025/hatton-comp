@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -74,21 +75,20 @@ export default async function MePage() {
         </Section>
 
         <Section title="Put it on your Home Screen">
-          <div className="text-[15px] leading-relaxed">
-            <p className="text-muted">
-              It then opens like a normal app, full screen, with its own icon.
-            </p>
-            <p className="mt-3 font-medium">iPhone</p>
-            <p className="text-muted">
-              In Safari, tap Share (the square with an arrow), scroll down, tap
-              Add to Home Screen, then Add.
-            </p>
-            <p className="mt-3 font-medium">Android</p>
-            <p className="text-muted">
-              In Chrome, tap the three dots at the top right, then Add to Home
-              screen.
-            </p>
-          </div>
+          <p className="text-[15px] leading-relaxed text-muted">
+            It then opens like a normal app — full screen, its own icon, and
+            notifications work.
+          </p>
+          <Link
+            href="/install"
+            className="mt-3 block rounded-xl border border-line px-4 py-3 text-center text-[15px] font-semibold"
+          >
+            Show me how
+          </Link>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted">
+            This is also the link to share with anyone joining —
+            hatton-comp.vercel.app/install
+          </p>
         </Section>
 
         <form action={signOut}>
