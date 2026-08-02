@@ -173,10 +173,31 @@ not because of anything in this app:
   WhatsApp's terms and risk the account being banned. Not worth it for this.
 
 **The decision:** the app's own push notifications are the noticeboard — they
-genuinely are instant and automatic. "Also post to WhatsApp" is a small link on
-each game for the occasional extra nudge, not the main channel. A prompt appears
-on the games list for anyone who hasn't switched notifications on yet, and can
-be dismissed for good.
+genuinely are instant and automatic. A prompt appears on the games list for
+anyone who hasn't switched notifications on yet, and can be dismissed for good.
+
+**Closing the loop (2 Aug 2026).** Posting can't be automated, but the other
+three parts of the loop can be, and are:
+
+1. **Link previews.** A game link pasted into WhatsApp unfurls as a card — date,
+   time, venue, the four slots, and how many are still needed — drawn fresh on
+   every request. The share button appends a changing query string, because
+   WhatsApp caches one preview per URL and a second post about the same game
+   would otherwise show a stale line-up.
+2. **The return trip.** Tapping a game link while signed out shows that game and
+   a way in, rather than the front door. After the code and name, the person
+   lands back on the game they were invited to. Redirect targets are restricted
+   to in-app paths so a doctored link can't bounce someone elsewhere.
+3. **Asking at the right moment.** After creating a game, filling the last slot,
+   losing a player, or cancelling, the app puts up one button to tell the group —
+   while the phone is still in their hand.
+4. **Noticing on your behalf.** The hourly job spots a game that's coming up and
+   still short of players, and nudges whoever created it to post about it. Once
+   per game.
+
+The one route to genuinely automatic posting — a bot phone number in the group —
+is written up in [whatsapp-bot-option.md](whatsapp-bot-option.md), along with why
+it isn't recommended.
 
 **Who gets in:** the app cannot check WhatsApp group membership either. In
 practice the app link and the group code live in the WhatsApp group's
