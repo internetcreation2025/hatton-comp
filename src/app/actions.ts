@@ -15,6 +15,7 @@ import {
   addPlayer,
   findHattonClash,
   getGame,
+  getMember,
   logEvent,
   removePlayer as removePlayerRow,
 } from "@/lib/games";
@@ -460,6 +461,68 @@ export async function addGuest(
   revalidatePath(`/game/${gameId}`);
   revalidatePath("/");
   return { ok: true };
+}
+
+/**
+ * Put someone else from the group into a game.
+ *
+ * Anyone can do this for anyone — it's how "put me down for Tuesday" in the
+ * WhatsApp chat gets acted on. Every add is stamped with who did it, so it's
+ * visible rather than prevented.
+ */
+export async function addMemberToGame(formData: FormData): Promise<void> {
+  console.log("[addMemberToGame] start");
+  const actor = await requireMember();
+  const gameId = String(formData.get("gameId") ?? "");
+  const memberId = String(formData.get("memberId") ?? "");
+
+  const game = await getGame(gameId);
+  if (!game || game.status === "cancelled") return;
+
+  const already = [...game.players, ...game.waitlist].some(
+    (p) => p.member_id === memberId,
+  );
+  if (already) return;
+
+  const target = await getMember(memberId);
+  if (!target) return;
+
+  const { outcome } = await addPlayer(gameId, actor.id, { memberId });
+
+  await logEvent(
+    gameId,
+    actor.id,
+    "joined",
+    actor.id === memberId
+      ? `${actor.display_name} joined`
+      : `${actor.display_name} added ${target.display_name}${outcome === "waitlist" ? " to the waitlist" : ""}`,
+  );
+
+  // Being put in a game by someone else is exactly the sort of thing you want
+  // to hear about.
+  if (actor.id !== memberId) {
+    await notifyMembers([memberId], {
+      title:
+        outcome === "playing"
+          ? `${actor.display_name} put you in a game`
+          : `${actor.display_name} put you on a waitlist`,
+      body: `${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+      url: `/game/${gameId}`,
+    });
+  }
+
+  if (outcome === "playing" && game.spotsLeft === 1) {
+    const updated = await getGame(gameId);
+    await notifyMembers(updated?.players.map((p) => p.member_id) ?? [], {
+      title: "Game on — that's four",
+      body: `${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue} is full.`,
+      url: `/game/${gameId}`,
+    });
+  }
+
+  console.log("[addMemberToGame] done —", outcome);
+  revalidatePath("/");
+  revalidatePath(`/game/${gameId}`);
 }
 
 /** Used to take a guest out, or for an admin/organiser to remove anyone. */

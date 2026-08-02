@@ -6,13 +6,13 @@ import AppShell from "@/components/AppShell";
 import Avatar from "@/components/Avatar";
 import Slots from "@/components/Slots";
 import JoinLeaveButton from "@/components/JoinLeaveButton";
-import AddGuestForm from "@/components/AddGuestForm";
+import AddPlayers from "@/components/AddPlayers";
 import ShareButton from "@/components/ShareButton";
 import PostPrompt, { type Occasion } from "@/components/PostPrompt";
 import CancelGameButton from "@/components/CancelGameButton";
 import { removePlayerFromGame } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
-import { getGame, getGameEvents } from "@/lib/games";
+import { getGame, getGameEvents, getMembersNotInGame } from "@/lib/games";
 import { shareMessage, spotsLine } from "@/lib/share";
 import {
   durationMinutes,
@@ -121,7 +121,16 @@ export default async function GamePage({ params, searchParams }: Props) {
 
   const { tell } = await searchParams;
   const occasion = readOccasion(tell);
-  const events = await getGameEvents(id);
+  const [events, notInGame] = await Promise.all([
+    getGameEvents(id),
+    getMembersNotInGame(id),
+  ]);
+
+  const candidates = notInGame.map((m) => ({
+    id: m.id,
+    display_name: m.display_name,
+    colour: m.colour,
+  }));
 
   const cancelled = game.status === "cancelled";
   const finished = new Date(game.ends_at) < new Date();
@@ -268,7 +277,11 @@ export default async function GamePage({ params, searchParams }: Props) {
               full={game.spotsLeft === 0}
               startsAt={game.starts_at}
             />
-            <AddGuestForm gameId={game.id} />
+            <AddPlayers
+              gameId={game.id}
+              candidates={candidates}
+              full={game.spotsLeft === 0}
+            />
             {!occasion && (
               <ShareButton message={shareMessage(game)} gameId={game.id} />
             )}

@@ -179,6 +179,39 @@ export async function findHattonClash(
   return rows.length ? rows[0] : null;
 }
 
+/**
+ * Everyone in the group who isn't already in this game — the list you pick from
+ * when someone says "put me down" in the chat.
+ */
+export async function getMembersNotInGame(gameId: string): Promise<Member[]> {
+  const [membersResult, playersResult] = await Promise.all([
+    db().from("members").select("*").order("display_name"),
+    db().from("game_players").select("member_id").eq("game_id", gameId),
+  ]);
+
+  if (membersResult.error) throw new Error(membersResult.error.message);
+  if (playersResult.error) throw new Error(playersResult.error.message);
+
+  const taken = new Set(
+    (playersResult.data as { member_id: string | null }[])
+      .map((p) => p.member_id)
+      .filter(Boolean),
+  );
+
+  return (membersResult.data as Member[]).filter((m) => !taken.has(m.id));
+}
+
+export async function getMember(id: string): Promise<Member | null> {
+  const { data, error } = await db()
+    .from("members")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data as Member) ?? null;
+}
+
 export async function logEvent(
   gameId: string,
   actorId: string | null,
