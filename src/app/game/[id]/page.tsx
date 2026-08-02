@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import AppShell from "@/components/AppShell";
 import Avatar from "@/components/Avatar";
@@ -7,10 +8,12 @@ import Slots from "@/components/Slots";
 import JoinLeaveButton from "@/components/JoinLeaveButton";
 import AddGuestForm from "@/components/AddGuestForm";
 import ShareButton from "@/components/ShareButton";
+import PostPrompt, { type Occasion } from "@/components/PostPrompt";
 import CancelGameButton from "@/components/CancelGameButton";
 import { removePlayerFromGame } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
 import { getGame, getGameEvents } from "@/lib/games";
+import { shareMessage, spotsLine } from "@/lib/share";
 import {
   durationMinutes,
   formatClock,
@@ -23,40 +26,101 @@ import type { GameWithPlayers } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-/** The message that gets pasted into WhatsApp. */
-function shareSummary(game: GameWithPlayers): string {
-  const lines = [
-    `Padel — ${formatShortDate(game.starts_at)}, ${formatTimeRange(game.starts_at, game.ends_at)}`,
-    game.court ? `${game.venue} · Court ${game.court}` : game.venue,
-    "",
-  ];
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tell?: string }>;
+};
 
-  for (let i = 0; i < game.capacity; i++) {
-    lines.push(`${i + 1}. ${game.players[i]?.name ?? "—"}`);
-  }
+/**
+ * What WhatsApp reads when the link is pasted into the chat. Deliberately
+ * available without signing in — otherwise the crawler gets a redirect and the
+ * link shows up as a bare blue URL.
+ */
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  const game = await getGame(id);
 
-  lines.push("");
-  lines.push(
-    game.spotsLeft === 0
-      ? "That's four — game on."
-      : `${game.spotsLeft} ${game.spotsLeft === 1 ? "spot" : "spots"} left:`,
-  );
+  if (!game) return { title: "Game not found · Hatton Competitors" };
 
-  return lines.join("\n");
+  const title = `${formatShortDate(game.starts_at)}, ${formatTimeRange(game.starts_at, game.ends_at)} · ${game.venue}`;
+
+  return {
+    title: `${title} · Hatton Competitors`,
+    description: spotsLine(game),
+    openGraph: {
+      title,
+      description: `${spotsLine(game)} — tap to see who's playing.`,
+      type: "website" as const,
+    },
+  };
 }
 
-export default async function GamePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const member = await getCurrentMember();
-  if (!member) redirect("/join");
+const TELL_OCCASIONS = new Set<Occasion>(["new", "full", "spot", "off", "needs"]);
 
+function readOccasion(value: string | undefined): Occasion | null {
+  return value && TELL_OCCASIONS.has(value as Occasion)
+    ? (value as Occasion)
+    : null;
+}
+
+/** What someone arriving from WhatsApp sees before they've joined. */
+function SignedOutView({ game }: { game: GameWithPlayers }) {
+  return (
+    <main className="safe-top safe-bottom flex flex-1 flex-col justify-center px-6 py-10">
+      <div className="mx-auto w-full max-w-sm">
+        <div className="mb-8 flex justify-center">
+          <div className="rounded-xl bg-white p-3 shadow-sm">
+            <Image
+              src="/hatton-logo.jpg"
+              alt="Hatton Sports Club"
+              width={229}
+              height={84}
+              priority
+              className="h-10 w-auto"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-surface p-5 text-center">
+          <p className="text-[19px] font-semibold tracking-tight">
+            {formatShortDate(game.starts_at)},{" "}
+            {formatTimeRange(game.starts_at, game.ends_at)}
+          </p>
+          <p className="mt-1 text-[15px] text-muted">
+            {game.venue}
+            {game.court ? ` · Court ${game.court}` : ""}
+          </p>
+          <p className="mt-3 text-[15px] font-medium">{spotsLine(game)}</p>
+        </div>
+
+        <Link
+          href={`/join?next=/game/${game.id}`}
+          className="mt-5 block rounded-xl bg-accent px-4 py-3.5 text-center text-[16px] font-semibold text-accent-ink"
+        >
+          Add your name
+        </Link>
+
+        <p className="mt-3 text-center text-[13px] leading-relaxed text-muted">
+          You&apos;ll need the group code once. After that this game opens
+          straight away.
+        </p>
+      </div>
+    </main>
+  );
+}
+
+export default async function GamePage({ params, searchParams }: Props) {
   const { id } = await params;
   const game = await getGame(id);
   if (!game) notFound();
 
+  // Anyone tapping the link in WhatsApp lands here. Show them the game and a
+  // way in, rather than dumping them on the front door.
+  const member = await getCurrentMember();
+  if (!member) return <SignedOutView game={game} />;
+
+  const { tell } = await searchParams;
+  const occasion = readOccasion(tell);
   const events = await getGameEvents(id);
 
   const cancelled = game.status === "cancelled";
@@ -70,7 +134,10 @@ export default async function GamePage({
   return (
     <AppShell
       title={formatDayLabel(game.starts_at)}
-      back={{ href: finished ? "/past" : "/", label: finished ? "History" : "Upcoming" }}
+      back={{
+        href: finished ? "/past" : "/",
+        label: finished ? "History" : "Upcoming",
+      }}
       action={
         canManage && !cancelled && !finished ? (
           <Link
@@ -83,6 +150,14 @@ export default async function GamePage({
       }
     >
       <div className="flex flex-col gap-4">
+        {occasion && (
+          <PostPrompt
+            occasion={occasion}
+            message={shareMessage(game)}
+            gameId={game.id}
+          />
+        )}
+
         {cancelled && (
           <p className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-[15px] font-medium text-danger">
             This game was cancelled. Don&apos;t turn up.
@@ -171,11 +246,7 @@ export default async function GamePage({
                   <span className="w-4 shrink-0 text-center text-[13px] text-muted">
                     {index + 1}
                   </span>
-                  <Avatar
-                    name={player.name}
-                    colour={player.colour}
-                    size={28}
-                  />
+                  <Avatar name={player.name} colour={player.colour} size={28} />
                   <span className="truncate text-[15px]">{player.name}</span>
                 </li>
               ))}
@@ -198,7 +269,9 @@ export default async function GamePage({
               startsAt={game.starts_at}
             />
             <AddGuestForm gameId={game.id} />
-            <ShareButton summary={shareSummary(game)} gameId={game.id} />
+            {!occasion && (
+              <ShareButton message={shareMessage(game)} gameId={game.id} />
+            )}
           </section>
         )}
 

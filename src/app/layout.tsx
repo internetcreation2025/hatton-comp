@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { THEME_COLOUR, THEME_COOKIE, readTheme } from "@/lib/theme";
+import { siteUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +11,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
+  // Link previews need full URLs, not relative ones.
+  metadataBase: new URL(siteUrl()),
   title: "Hatton Competitors",
   description: "Who's playing, and when.",
   manifest: "/manifest.webmanifest",

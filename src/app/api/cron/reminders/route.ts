@@ -2,20 +2,25 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getGame } from "@/lib/games";
 import { notifyMembers } from "@/lib/push";
-import { formatTime } from "@/lib/time";
+import { formatShortDate, formatTime } from "@/lib/time";
 import type { Game } from "@/lib/types";
 
 /**
- * "Your game is soon" reminders.
+ * The hourly job. Two things:
  *
- * Runs on a schedule (see vercel.json). Picks up any game starting in the next
- * few hours that hasn't had its reminder yet, tells the players, and marks it
- * so nobody gets nagged twice.
+ * 1. Reminds the players a few hours before their game.
+ * 2. Spots a game that's coming up and still short of players, and nudges
+ *    whoever set it up to put it in the WhatsApp group. The app decides when
+ *    the group needs telling; the person only has to tap.
+ *
+ * Both are marked once done, so nobody gets nagged twice.
  */
 
 export const dynamic = "force-dynamic";
 
-const LOOKAHEAD_MS = 3 * 60 * 60 * 1000 + 15 * 60 * 1000; // ~3 hours
+const REMINDER_LOOKAHEAD_MS = 3 * 60 * 60 * 1000 + 15 * 60 * 1000; // ~3 hours
+const NUDGE_LOOKAHEAD_MS = 36 * 60 * 60 * 1000; // a day and a half
+const NUDGE_MIN_NOTICE_MS = 4 * 60 * 60 * 1000; // no point nagging at the last minute
 
 export async function GET(request: Request) {
   console.log("[cron/reminders] start");
@@ -29,25 +34,25 @@ export async function GET(request: Request) {
   }
 
   const now = new Date();
-  const until = new Date(now.getTime() + LOOKAHEAD_MS);
+  let reminded = 0;
+  let nudged = 0;
 
-  const { data, error } = await db()
+  /* --- 1. "Your game is soon" -------------------------------------------- */
+
+  const { data: dueData, error: dueError } = await db()
     .from("games")
     .select("*")
     .is("reminder_sent_at", null)
     .neq("status", "cancelled")
     .gte("starts_at", now.toISOString())
-    .lte("starts_at", until.toISOString());
+    .lte("starts_at", new Date(now.getTime() + REMINDER_LOOKAHEAD_MS).toISOString());
 
-  if (error) {
-    console.error("[cron/reminders] query failed", error.message);
+  if (dueError) {
+    console.error("[cron/reminders] reminder query failed", dueError.message);
     return NextResponse.json({ error: "query failed" }, { status: 500 });
   }
 
-  const games = data as Game[];
-  let sent = 0;
-
-  for (const row of games) {
+  for (const row of dueData as Game[]) {
     const game = await getGame(row.id);
     if (!game || game.players.length === 0) continue;
 
@@ -65,9 +70,42 @@ export async function GET(request: Request) {
       .update({ reminder_sent_at: new Date().toISOString() })
       .eq("id", game.id);
 
-    sent += 1;
+    reminded += 1;
   }
 
-  console.log(`[cron/reminders] done — ${sent} reminder(s) sent`);
-  return NextResponse.json({ ok: true, sent });
+  /* --- 2. "This one still needs players" --------------------------------- */
+
+  const { data: shortData, error: shortError } = await db()
+    .from("games")
+    .select("*")
+    .is("nudge_sent_at", null)
+    .eq("status", "open")
+    .gte("starts_at", new Date(now.getTime() + NUDGE_MIN_NOTICE_MS).toISOString())
+    .lte("starts_at", new Date(now.getTime() + NUDGE_LOOKAHEAD_MS).toISOString());
+
+  if (shortError) {
+    console.error("[cron/reminders] nudge query failed", shortError.message);
+  } else {
+    for (const row of shortData as Game[]) {
+      const game = await getGame(row.id);
+      if (!game || game.spotsLeft === 0) continue;
+
+      const needed = game.spotsLeft;
+      await notifyMembers([game.created_by], {
+        title: `Still ${needed} short for ${formatShortDate(game.starts_at)}`,
+        body: `${formatTime(game.starts_at)} at ${game.venue}. Tap to post it in the group.`,
+        url: `/game/${game.id}?tell=needs`,
+      });
+
+      await db()
+        .from("games")
+        .update({ nudge_sent_at: new Date().toISOString() })
+        .eq("id", game.id);
+
+      nudged += 1;
+    }
+  }
+
+  console.log(`[cron/reminders] done — ${reminded} reminded, ${nudged} nudged`);
+  return NextResponse.json({ ok: true, reminded, nudged });
 }

@@ -19,6 +19,7 @@ import {
   removePlayer as removePlayerRow,
 } from "@/lib/games";
 import { notifyEveryone, notifyMembers } from "@/lib/push";
+import { safeNext } from "@/lib/next-url";
 import { formatShortDate, formatTime, londonToUtc } from "@/lib/time";
 import type { Member } from "@/lib/types";
 
@@ -91,7 +92,8 @@ export async function joinGroup(
   });
 
   console.log("[joinGroup] done —", member.display_name);
-  redirect("/");
+  // Somebody who tapped a game link in WhatsApp goes straight to that game.
+  redirect(safeNext(String(formData.get("next") ?? "")));
 }
 
 export async function signOut(): Promise<void> {
@@ -219,7 +221,9 @@ export async function createGame(
 
   console.log("[createGame] done —", game.id);
   revalidatePath("/");
-  redirect(`/game/${game.id}`);
+  // Land on the game with the "tell the group" prompt up, while the phone is
+  // still in their hand.
+  redirect(`/game/${game.id}?tell=new`);
 }
 
 export async function editGame(
@@ -327,6 +331,7 @@ export async function cancelGame(formData: FormData): Promise<void> {
   console.log("[cancelGame] done —", gameId);
   revalidatePath("/");
   revalidatePath(`/game/${gameId}`);
+  redirect(`/game/${gameId}?tell=off`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -372,6 +377,11 @@ export async function joinGame(formData: FormData): Promise<void> {
   console.log("[joinGame] done —", outcome);
   revalidatePath("/");
   revalidatePath(`/game/${gameId}`);
+
+  // Whoever completes the four is best placed to tell the group it's on.
+  if (outcome === "playing" && game.spotsLeft === 1) {
+    redirect(`/game/${gameId}?tell=full`);
+  }
 }
 
 export async function leaveGame(formData: FormData): Promise<void> {
@@ -412,6 +422,11 @@ export async function leaveGame(formData: FormData): Promise<void> {
   console.log("[leaveGame] done");
   revalidatePath("/");
   revalidatePath(`/game/${gameId}`);
+
+  // A gap nobody on the waitlist could fill is worth putting in the chat.
+  if (wasPlaying && !promoted && new Date(game.starts_at) > new Date()) {
+    redirect(`/game/${gameId}?tell=spot`);
+  }
 }
 
 export async function addGuest(

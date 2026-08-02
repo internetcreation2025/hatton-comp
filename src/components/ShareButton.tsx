@@ -1,44 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { buildMessageWithLink, postToWhatsApp } from "./postToWhatsApp";
 
 /**
- * Posts a summary of the game into WhatsApp.
- *
- * Deliberately a small link rather than a button: the app's own notifications
- * are the noticeboard now, and this is the occasional extra nudge. It opens
- * WhatsApp directly, but WhatsApp gives no way to pre-select a group, so
- * choosing the chat is always the sender's tap to make.
+ * The quiet version, always available at the bottom of a game. The loud one
+ * that appears right after something happens is PostPrompt.
  */
 export default function ShareButton({
-  summary,
+  message,
   gameId,
 }: {
-  summary: string;
+  message: string;
   gameId: string;
 }) {
   const [copied, setCopied] = useState(false);
 
   function post() {
-    const link = `${window.location.origin}/game/${gameId}`;
-    const message = `${summary}\n${link}`;
+    if (postToWhatsApp(message, gameId)) return;
 
-    const opened = window.open(
-      `https://wa.me/?text=${encodeURIComponent(message)}`,
-      "_blank",
-      "noopener,noreferrer",
+    navigator.clipboard?.writeText(buildMessageWithLink(message, gameId)).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      },
+      () => undefined,
     );
-
-    // Blocked by a pop-up blocker — fall back to the clipboard.
-    if (!opened) {
-      navigator.clipboard?.writeText(message).then(
-        () => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2500);
-        },
-        () => undefined,
-      );
-    }
   }
 
   return (
@@ -47,7 +34,7 @@ export default function ShareButton({
       onClick={post}
       className="mx-auto flex items-center gap-1.5 py-1 text-[14px] font-medium text-muted underline underline-offset-4"
     >
-      {copied ? "Copied — paste it into the group" : "Also post to WhatsApp"}
+      {copied ? "Copied — paste it into the group" : "Post this to WhatsApp"}
     </button>
   );
 }

@@ -17,11 +17,13 @@ function Submit() {
   );
 }
 
-export default function JoinForm() {
+export default function JoinForm({ next }: { next: string }) {
   const [state, formAction] = useActionState<FormState, FormData>(joinGroup, {});
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="next" value={next} />
+
       <div>
         <label
           htmlFor="code"
