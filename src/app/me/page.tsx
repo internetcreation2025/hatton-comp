@@ -11,7 +11,7 @@ import { getCurrentMember } from "@/lib/auth";
 import { THEME_COOKIE, readTheme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "You · Hatton Padel" };
+export const metadata = { title: "You · Hatton Competitors" };
 
 function Section({
   title,

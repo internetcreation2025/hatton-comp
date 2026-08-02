@@ -1,4 +1,4 @@
-# Hatton Padel — Project Spec
+# Hatton Competitors — Project Spec
 
 **Status:** Draft — awaiting approval
 **Date:** 1 August 2026
@@ -99,6 +99,11 @@ Chosen approach: **group code + pick your name.**
 - **Dropping out.** Always allowed, but if it's within 24 hours of the game the app shows a gentle confirm: *"This game is tomorrow — the others will be notified. Still leaving?"*
 - **Cancelled games.** Never deleted — marked cancelled, greyed out, and everyone in the game is notified.
 - **Past games** auto-move out of Upcoming once the end time passes. No manual tidying.
+- **Hatton has one court.** Two games at Hatton can never overlap. The database
+  enforces it, so two people creating a game at the same moment can't both
+  succeed — the second is told which game is in the way. Back-to-back games are
+  fine (5:00–6:30 then 6:30–8:00), cancelling a game frees its slot, and other
+  venues are unaffected because they have more than one court.
 
 ---
 
@@ -265,7 +270,8 @@ there, untouched, and can be dropped whenever you like.
 
 ## 10. Decisions (confirmed 1 Aug 2026)
 
-1. **App name** — "Hatton Padel" for now.
+1. **App name** — "Hatton Competitors", matching the WhatsApp group. This is
+   what appears under the icon when the app is added to a home screen.
 2. **Venue** — defaults to "Hatton", but the field is free text so anyone can type their own (Bathgate, David Lloyd, etc.). Recently used venues appear as quick-pick suggestions.
 3. **Game length** — 90 minutes by default, changeable per game.
 4. **Group code** — set. Stored only in `.env.local` / Vercel environment variables as `GROUP_CODE`; never written into code or into this file.

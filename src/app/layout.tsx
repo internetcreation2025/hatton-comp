@@ -10,12 +10,13 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Hatton Padel",
+  title: "Hatton Competitors",
   description: "Who's playing, and when.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Hatton Padel",
+    // This is the name that appears under the icon on an iPhone home screen.
+    title: "Hatton Competitors",
     statusBarStyle: "default",
   },
   // It's a private group app — keep it out of search results.

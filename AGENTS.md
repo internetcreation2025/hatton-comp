@@ -4,7 +4,7 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Hatton Padel — Project Instructions
+# Hatton Competitors — Project Instructions
 
 Global rules in `~/.claude/CLAUDE.md` apply. This file only adds what's specific to this project.
 

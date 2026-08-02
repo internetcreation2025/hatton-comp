@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentMember } from "@/lib/auth";
 import JoinForm from "./JoinForm";
 
-export const metadata = { title: "Join · Hatton Padel" };
+export const metadata = { title: "Join · Hatton Competitors" };
 
 export default async function JoinPage() {
   // Already in? Don't make them do this twice.
@@ -26,7 +26,7 @@ export default async function JoinPage() {
         </div>
 
         <h1 className="text-center text-2xl font-semibold tracking-tight">
-          Hatton Padel
+          Hatton Competitors
         </h1>
         <p className="mt-2 text-center text-[15px] leading-relaxed text-muted">
           The place the games actually live. Enter the code from the WhatsApp

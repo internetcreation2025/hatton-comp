@@ -142,7 +142,7 @@ export default function NotificationsToggle() {
             Scroll down and tap{" "}
             <span className="text-ink">Add to Home Screen</span>.
           </li>
-          <li>Tap Add, then open Hatton Padel from your Home Screen.</li>
+          <li>Tap Add, then open Hatton Competitors from your Home Screen.</li>
           <li>Come back to this page and the switch will be here.</li>
         </ol>
       </div>

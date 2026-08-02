@@ -8,7 +8,7 @@ import { getGame, getRecentVenues } from "@/lib/games";
 import { durationMinutes, utcToLondonInputs } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Edit game · Hatton Padel" };
+export const metadata = { title: "Edit game · Hatton Competitors" };
 
 export default async function EditGamePage({
   params,

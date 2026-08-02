@@ -7,7 +7,7 @@ import { getPastGames } from "@/lib/games";
 import { formatShortDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "History · Hatton Padel" };
+export const metadata = { title: "History · Hatton Competitors" };
 
 export default async function PastPage() {
   const member = await getCurrentMember();

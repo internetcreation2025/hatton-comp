@@ -1,4 +1,4 @@
-# Hatton Padel
+# Hatton Competitors
 
 A small private app for a WhatsApp group that arranges padel games. Each game is
 a card with a date, time, venue and four slots. People tap a slot to join and tap

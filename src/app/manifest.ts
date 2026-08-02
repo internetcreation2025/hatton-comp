@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hatton Padel",
-    short_name: "Padel",
+    name: "Hatton Competitors",
+    short_name: "Hatton Competitors",
     description: "Who's playing, and when.",
     start_url: "/",
     scope: "/",

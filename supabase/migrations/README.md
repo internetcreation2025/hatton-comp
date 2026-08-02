@@ -14,3 +14,6 @@ via the Supabase MCP tools, in this order:
 
 The full SQL for each is in the project's migration history in the Supabase
 dashboard: Database → Migrations.
+4. `prevent_overlapping_games_at_hatton` — an exclusion constraint so two
+   non-cancelled games at Hatton can never overlap in time. Hatton has one
+   court. Other venues are unaffected.

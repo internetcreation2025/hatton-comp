@@ -148,6 +148,37 @@ export async function getRecentVenues(): Promise<string[]> {
   return [...seen].slice(0, 8);
 }
 
+/**
+ * Hatton has one court, so games there can't run at the same time. The database
+ * enforces this properly; this exists so people get a sentence that explains
+ * what's in the way rather than a bare error.
+ */
+export async function findHattonClash(
+  venue: string,
+  startsAt: string,
+  endsAt: string,
+  excludeGameId?: string,
+): Promise<Game | null> {
+  if (venue.trim().toLowerCase() !== "hatton") return null;
+
+  let query = db()
+    .from("games")
+    .select("*")
+    .ilike("venue", "hatton")
+    .neq("status", "cancelled")
+    // Two ranges overlap when each starts before the other ends.
+    .lt("starts_at", endsAt)
+    .gt("ends_at", startsAt);
+
+  if (excludeGameId) query = query.neq("id", excludeGameId);
+
+  const { data, error } = await query.limit(1);
+  if (error) throw new Error(error.message);
+
+  const rows = data as Game[];
+  return rows.length ? rows[0] : null;
+}
+
 export async function logEvent(
   gameId: string,
   actorId: string | null,

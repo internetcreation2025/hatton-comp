@@ -13,6 +13,7 @@ import {
 } from "@/lib/session";
 import {
   addPlayer,
+  findHattonClash,
   getGame,
   logEvent,
   removePlayer as removePlayerRow,
@@ -158,6 +159,11 @@ function readGameForm(formData: FormData) {
   };
 }
 
+/** The message shown when a Hatton game would run over another one. */
+function clashMessage(clash: { starts_at: string; ends_at: string }): string {
+  return `There's already a game at Hatton from ${formatTime(clash.starts_at)} to ${formatTime(clash.ends_at)} that day. Hatton only has one court, so games can't overlap.`;
+}
+
 export async function createGame(
   _prev: FormState,
   formData: FormData,
@@ -168,6 +174,13 @@ export async function createGame(
   const parsed = readGameForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
+  const clash = await findHattonClash(
+    parsed.values.venue,
+    parsed.values.starts_at,
+    parsed.values.ends_at,
+  );
+  if (clash) return { error: clashMessage(clash) };
+
   const { data, error } = await db()
     .from("games")
     .insert({ ...parsed.values, created_by: member.id })
@@ -175,6 +188,13 @@ export async function createGame(
     .single();
 
   if (error) {
+    // Someone booked the same Hatton slot a split second earlier.
+    if (error.code === "23P01") {
+      return {
+        error:
+          "Someone just booked that Hatton slot. Pick another time and try again.",
+      };
+    }
     console.error("[createGame] failed", error.message);
     return { error: "Couldn't create that game. Please try again." };
   }
@@ -222,12 +242,26 @@ export async function editGame(
   const timeChanged = parsed.values.starts_at !== game.starts_at;
   const venueChanged = parsed.values.venue !== game.venue;
 
+  const clash = await findHattonClash(
+    parsed.values.venue,
+    parsed.values.starts_at,
+    parsed.values.ends_at,
+    gameId,
+  );
+  if (clash) return { error: clashMessage(clash) };
+
   const { error } = await db()
     .from("games")
     .update({ ...parsed.values, updated_at: new Date().toISOString() })
     .eq("id", gameId);
 
   if (error) {
+    if (error.code === "23P01") {
+      return {
+        error:
+          "Someone just booked that Hatton slot. Pick another time and try again.",
+      };
+    }
     console.error("[editGame] failed", error.message);
     return { error: "Couldn't save those changes. Please try again." };
   }

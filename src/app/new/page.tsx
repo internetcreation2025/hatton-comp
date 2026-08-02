@@ -8,7 +8,7 @@ import { getRecentVenues } from "@/lib/games";
 import { defaultGameStart } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "New game · Hatton Padel" };
+export const metadata = { title: "New game · Hatton Competitors" };
 
 export default async function NewGamePage() {
   const member = await getCurrentMember();
