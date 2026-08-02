@@ -19,6 +19,7 @@ Everything else depends on this working.
 | Tap Share (square with an arrow) → **Add to Home Screen** → Add | An icon appears called **Hatton Competitors**, showing the yellow ball |
 | **Close Safari.** Open the app from the new icon | Full screen, no browser bar at the top |
 | Go to **You** → Notifications → **Turn notifications on** | iPhone asks permission. Say Allow. Button changes to "Turn notifications off" |
+| Tap **Send me a test notification** | A notification arrives within a few seconds, and the app tells you how many devices it went to |
 
 > If it shows Add-to-Home-Screen instructions instead of a switch, you're still in
 > Safari rather than the installed app. Open it from the icon.
@@ -63,9 +64,19 @@ This covers most of the app. You don't need anyone else.
 This is the important round. You need a **laptop or a second device** — it acts
 as another player. A private/incognito window works too.
 
-1. On the laptop, open the app and join with a different name, e.g. "Test
-   Player".
-2. Turn notifications on there as well (Chrome will ask).
+1. On the laptop, open the app and join with a **different name** — e.g. "Test
+   Player". This matters: if you type your own name again, the laptop signs in
+   as *you*, and the app will correctly notify nobody, which looks exactly like
+   notifications being broken.
+2. Turn notifications on there as well (Chrome will ask), and send yourself a
+   test notification to prove that device is set up.
+3. On the laptop, go to **You** and check the name at the top says "Test
+   Player", not yours.
+
+**While you're here, check the name-clash guard:** on the laptop, sign out and
+try to join as **your own name**. It should stop and ask "Mike Sutherland is
+already in the group — is that you?" rather than silently signing you in.
+Tap "No, I'm someone else" and it should hand the name field back.
 
 Now, with your phone in one hand and the laptop in front of you:
 
@@ -83,7 +94,9 @@ Now, with your phone in one hand and the laptop in front of you:
 
 | Do this | What should happen |
 |---|---|
-| Fill a game to four, then join from the laptop | "Sorry, that filled up" — laptop lands on the **Waiting** list |
+| From the **phone**, fill a game to four **without the laptop person in it** | The card shows **Game on** |
+| On the **laptop**, open that game | The button reads **Join the waitlist** — you only ever see this on a full game you're *not* in |
+| Tap it | The laptop lands on the **Waiting** list, position 1 |
 | From the phone, drop out | The laptop person is **promoted automatically** into the free slot and notified |
 
 ---
