@@ -6,9 +6,9 @@ import { formatShortDate, formatTime } from "@/lib/time";
 import type { Game } from "@/lib/types";
 
 /**
- * The hourly job. Two things:
+ * The scheduled job. Two things:
  *
- * 1. Reminds the players a few hours before their game.
+ * 1. Reminds the players an hour before their game.
  * 2. Spots a game that's coming up and still short of players, and nudges
  *    whoever set it up to put it in the WhatsApp group. The app decides when
  *    the group needs telling; the person only has to tap.
@@ -18,7 +18,12 @@ import type { Game } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const REMINDER_LOOKAHEAD_MS = 3 * 60 * 60 * 1000 + 15 * 60 * 1000; // ~3 hours
+/**
+ * Exactly an hour, with no grace either side. This runs every 10 minutes, so a
+ * game is picked up on the first tick where it's within the hour — i.e. between
+ * 50 and 60 minutes' notice, and never more than an hour early.
+ */
+const REMINDER_LOOKAHEAD_MS = 60 * 60 * 1000;
 const NUDGE_LOOKAHEAD_MS = 36 * 60 * 60 * 1000; // a day and a half
 const NUDGE_MIN_NOTICE_MS = 4 * 60 * 60 * 1000; // no point nagging at the last minute
 
@@ -37,7 +42,7 @@ export async function GET(request: Request) {
   let reminded = 0;
   let nudged = 0;
 
-  /* --- 1. "Your game is soon" -------------------------------------------- */
+  /* --- 1. "Your game is in an hour" -------------------------------------- */
 
   const { data: dueData, error: dueError } = await db()
     .from("games")
@@ -59,8 +64,8 @@ export async function GET(request: Request) {
     await notifyMembers(
       game.players.map((p) => p.member_id),
       {
-        title: "Padel today",
-        body: `${formatTime(game.starts_at)} at ${game.venue}${game.court ? `, court ${game.court}` : ""}.`,
+        title: "Padel in an hour",
+        body: `${formatTime(game.starts_at)} at ${game.venue}${game.court ? `, court ${game.court}` : ""}. Playing: ${game.players.map((p) => p.name).join(", ")}.`,
         url: `/game/${game.id}`,
       },
     );

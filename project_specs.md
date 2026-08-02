@@ -80,7 +80,7 @@ Chosen approach: **group code + pick your name.**
 | Page | What's on it |
 |---|---|
 | `/` **Upcoming** | The home screen. A list of upcoming game cards, soonest first, grouped by day ("Today", "Tomorrow", "Tuesday 4 Aug"). Each card shows time, venue, and four slots with names or "empty". Big obvious "+ New game" button. |
-| `/game/[id]` **Game detail** | Full view of one game: date/time, venue, court, notes, the four slots, the waitlist, and a plain-English activity log ("Robert created this game 05:34 · Mike joined 09:12"). Buttons: Join / Leave, Add a player, Share to WhatsApp, Edit, Cancel. |
+| `/game/[id]` **Game detail** | Full view of one game: date/time, venue, court, notes, the four slots, the waitlist, and a plain-English activity log ("Robert created this game 05:34 · Mike joined 09:12"). Buttons: Join / Leave, Add a player, Share to WhatsApp, Add to calendar, Edit, Cancel. |
 | `/new` **Create game** | Date, start time, duration (default 90 min), venue (dropdown, remembers recent), court number (optional), notes (optional). Creator is added to slot 1 automatically, with a tick-box to opt out if they're organising but not playing. |
 | `/past` **Calendar** | A month grid with the days that have games highlighted. Tap a day to see what was on. Read-only. |
 | `/players` **Players** | Everyone in the group, with their mobile number if they've given one, how many games they've played, and buttons to WhatsApp or call them. Organisers see extra controls on each row: make organiser, and remove from the group. |
@@ -220,7 +220,7 @@ three parts of the loop can be, and are:
 3. **Asking at the right moment.** After creating a game, filling the last slot,
    losing a player, or cancelling, the app puts up one button to tell the group —
    while the phone is still in their hand.
-4. **Noticing on your behalf.** The hourly job spots a game that's coming up and
+4. **Noticing on your behalf.** The scheduled job spots a game that's coming up and
    still short of players, and nudges whoever created it to post about it. Once
    per game.
 
@@ -247,9 +247,25 @@ description, which only members can read.
 | Someone drops out | The remaining players, plus the waitlist |
 | Game edited (time/venue changed) | The players in it |
 | Game cancelled | The players in it |
-| Reminder, 3 hours before | The players in it |
+| Reminder, an hour before | The players in it |
 
-Sending is done by a server route using the `web-push` library and a VAPID key pair stored in environment variables. The 3-hour reminder runs off a Vercel cron job.
+| Made an organiser | The person who was promoted |
+
+Sending is done by a server route using the `web-push` library and a VAPID key
+pair stored in environment variables. The reminder runs off a Vercel cron job
+that fires every 10 minutes and picks up any game starting within the hour, so
+the reminder lands 50–60 minutes before — never more than an hour early. Each
+game is marked once reminded, so it can only ever go out once.
+
+**Putting a game in your own calendar.** The game page has an "Add to calendar"
+button offering Apple Calendar, Google Calendar, Outlook, or a plain `.ics`
+download for anything else. The `.ics` is generated per game at
+`/game/[id]/calendar.ics`, behind the group code like everything else because it
+lists who's playing. It carries the same UID every time with a sequence number
+that goes up on each edit, so downloading it again after a time change updates
+the event already in their calendar instead of adding a second one. It
+deliberately contains **no alarm of its own** — the app's own reminder covers
+that, and two alerts at the same moment is just noise.
 
 ---
 
@@ -312,7 +328,7 @@ Kept out on purpose to get this into people's hands quickly — all straightforw
 | Code | https://github.com/internetcreation2025/hatton-comp (pushes to `main` deploy automatically) |
 | Database | Supabase project **HattComp** (`hijrblbefgpxdkdzcvvj`), eu-central-1 |
 | Hosting | Vercel project **hatton-comp**, team "Internet Creation's projects" |
-| Reminder cron | Vercel cron, hourly, hits `/api/cron/reminders` |
+| Reminder cron | Vercel cron, every 10 minutes, hits `/api/cron/reminders` |
 
 The Supabase project was an unused care-home trial that has been repurposed.
 Its old empty tables (`care_homes`, `tickets`, `profiles`, etc.) are still

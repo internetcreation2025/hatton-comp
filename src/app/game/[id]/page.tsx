@@ -8,12 +8,19 @@ import Slots from "@/components/Slots";
 import JoinLeaveButton from "@/components/JoinLeaveButton";
 import AddPlayers from "@/components/AddPlayers";
 import ShareButton from "@/components/ShareButton";
+import AddToCalendar from "@/components/AddToCalendar";
 import PostPrompt, { type Occasion } from "@/components/PostPrompt";
 import CancelGameButton from "@/components/CancelGameButton";
 import { removePlayerFromGame } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
+import {
+  calendarSummary,
+  googleCalendarUrl,
+  outlookCalendarUrl,
+} from "@/lib/calendar";
 import { getGame, getGameEvents, getMembersNotInGame } from "@/lib/games";
 import { shareMessage, spotsLine } from "@/lib/share";
+import { siteUrl } from "@/lib/site";
 import {
   durationMinutes,
   formatClock,
@@ -283,6 +290,12 @@ export default async function GamePage({ params, searchParams }: Props) {
               full={game.spotsLeft === 0}
             />
             <ShareButton message={shareMessage(game)} gameId={game.id} />
+            <AddToCalendar
+              gameId={game.id}
+              googleUrl={googleCalendarUrl(game, `${siteUrl()}/game/${game.id}`)}
+              outlookUrl={outlookCalendarUrl(game, `${siteUrl()}/game/${game.id}`)}
+              summary={calendarSummary(game)}
+            />
           </section>
         )}
 
