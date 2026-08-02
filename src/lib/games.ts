@@ -33,6 +33,8 @@ async function withPlayers(games: Game[]): Promise<GameWithPlayers[]> {
 
   const [playersResult, membersResult] = await Promise.all([
     db().from("game_players").select("*").in("game_id", gameIds),
+    // Everyone, including people who've since been removed from the group — a
+    // game they played in last month should still say who was there.
     db().from("members").select("*"),
   ]);
 
@@ -202,8 +204,12 @@ export async function findHattonClash(
 export async function getMembersNotInGame(gameId: string): Promise<Member[]> {
   const [membersResult, playersResult] = await Promise.all([
     // Most recently active first, so the regulars are the ones you see before
-    // typing anything.
-    db().from("members").select("*").order("last_seen_at", { ascending: false }),
+    // typing anything. Removed people never appear.
+    db()
+      .from("members")
+      .select("*")
+      .is("removed_at", null)
+      .order("last_seen_at", { ascending: false }),
     db().from("game_players").select("member_id").eq("game_id", gameId),
   ]);
 

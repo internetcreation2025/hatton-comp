@@ -5,6 +5,9 @@ export type Member = {
   is_admin: boolean;
   /** Optional mobile number, for the players directory. */
   phone: string | null;
+  /** Set when an organiser removes them. The row stays so past games keep the name. */
+  removed_at: string | null;
+  removed_by: string | null;
   created_at: string;
   last_seen_at: string;
 };

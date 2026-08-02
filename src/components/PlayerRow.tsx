@@ -3,7 +3,12 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Avatar from "./Avatar";
-import { savePhone, type FormState } from "@/app/actions";
+import {
+  removeMember,
+  savePhone,
+  setAdmin,
+  type FormState,
+} from "@/app/actions";
 import { toDiallable, toWhatsAppNumber } from "@/lib/phone";
 
 export type DirectoryEntry = {
@@ -28,16 +33,47 @@ function Save() {
   );
 }
 
+/** Small text-link buttons that know when their own form is mid-flight. */
+function AdminLink({ isAdmin }: { isAdmin: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="text-[13px] font-medium text-accent underline underline-offset-2 disabled:opacity-50"
+    >
+      {pending ? "…" : isAdmin ? "Remove organiser rights" : "Make organiser"}
+    </button>
+  );
+}
+
+function ConfirmRemove({ name }: { name: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-xl bg-destructive px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-60"
+    >
+      {pending ? "Removing…" : `Remove ${name}`}
+    </button>
+  );
+}
+
 export default function PlayerRow({
   entry,
   canEdit,
+  canManage,
   isYou,
 }: {
   entry: DirectoryEntry;
   canEdit: boolean;
+  /** Viewer is an organiser looking at somebody else's row. */
+  canManage: boolean;
   isYou: boolean;
 }) {
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [state, formAction] = useActionState<FormState, FormData>(savePhone, {});
 
   const [lastState, setLastState] = useState(state);
@@ -59,6 +95,11 @@ export default function PlayerRow({
             {isYou && (
               <span className="ml-1.5 text-[13px] font-normal text-muted">
                 (you)
+              </span>
+            )}
+            {entry.is_admin && (
+              <span className="ml-1.5 align-middle rounded-full border border-line px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+                Organiser
               </span>
             )}
           </p>
@@ -111,14 +152,70 @@ export default function PlayerRow({
         )}
       </div>
 
-      {canEdit && !editing && (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="mt-2 text-[13px] font-medium text-accent underline underline-offset-2"
-        >
-          {entry.phone ? "Change number" : "Add a number"}
-        </button>
+      {!editing && !confirming && (canEdit || canManage) && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-[13px] font-medium text-accent underline underline-offset-2"
+            >
+              {entry.phone ? "Change number" : "Add a number"}
+            </button>
+          )}
+
+          {canManage && (
+            <form action={setAdmin}>
+              <input type="hidden" name="memberId" value={entry.id} />
+              <input
+                type="hidden"
+                name="admin"
+                value={entry.is_admin ? "no" : "yes"}
+              />
+              <AdminLink isAdmin={entry.is_admin} />
+            </form>
+          )}
+
+          {/* Organisers have to be stood down first — one deliberate step at a time. */}
+          {canManage && !entry.is_admin && (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="text-[13px] font-medium text-danger underline underline-offset-2"
+            >
+              Remove from group
+            </button>
+          )}
+        </div>
+      )}
+
+      {confirming && (
+        <div className="mt-2.5 rounded-xl border border-danger/40 bg-danger/10 p-3.5">
+          <p className="text-[14px] leading-relaxed">
+            Remove{" "}
+            <span className="font-semibold">{entry.display_name}</span> from the
+            group?
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
+            They&apos;ll disappear from this list and from any games still to
+            come, and stop getting notifications. Games they&apos;ve already
+            played keep their name. If they still have the group code they can
+            join again.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            <form action={removeMember}>
+              <input type="hidden" name="memberId" value={entry.id} />
+              <ConfirmRemove name={entry.display_name} />
+            </form>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="w-full rounded-xl border border-line px-4 py-3 text-[15px] font-medium"
+            >
+              Keep them
+            </button>
+          </div>
+        </div>
       )}
 
       {editing && (

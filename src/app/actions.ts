@@ -28,8 +28,10 @@ import type { GameWithPlayers, Member } from "@/lib/types";
 export type FormState = {
   error?: string;
   ok?: boolean;
-  /** Set when the name typed is already in the group and we need to check. */
+  /** Set when the name typed is already on record and we need to check. */
   clash?: string;
+  /** True when that name belongs to someone who was removed from the group. */
+  clashRemoved?: boolean;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -79,8 +81,21 @@ export async function joinGroup(
   // phone — but it could equally be a second Neil. Signing them into someone
   // else's account by accident is the worst outcome, so ask.
   if (member && formData.get("confirm") !== "yes") {
-    console.log("[joinGroup] name already in the group —", member.display_name);
-    return { clash: member.display_name };
+    console.log("[joinGroup] name already on record —", member.display_name);
+    return {
+      clash: member.display_name,
+      clashRemoved: Boolean(member.removed_at),
+    };
+  }
+
+  // Somebody who was removed and has come back with the code. Removal isn't a
+  // ban — it's tidying the list — so let them back in with their history.
+  if (member?.removed_at) {
+    console.log("[joinGroup] restoring", member.display_name);
+    await db()
+      .from("members")
+      .update({ removed_at: null, removed_by: null })
+      .eq("id", member.id);
   }
 
   // Signing back in on a new phone and giving a number they didn't have before.
@@ -217,6 +232,164 @@ export async function savePhone(
   revalidatePath("/players");
   revalidatePath("/me");
   return { ok: true };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Managing the group                                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Hand someone organiser rights, or take them away.
+ *
+ * An organiser can edit and cancel any game, fill in anyone's number, remove
+ * people from the group, and make other organisers.
+ *
+ * You can't change your own — otherwise the last organiser could demote
+ * themselves and leave the group with nobody able to manage it. To step down,
+ * make someone else an organiser and ask them to remove yours.
+ */
+export async function setAdmin(formData: FormData): Promise<void> {
+  console.log("[setAdmin] start");
+  const actor = await requireMember();
+  if (!actor.is_admin) {
+    console.log("[setAdmin] not an organiser");
+    return;
+  }
+
+  const targetId = String(formData.get("memberId") ?? "");
+  const makeAdmin = formData.get("admin") === "yes";
+
+  if (targetId === actor.id) {
+    console.log("[setAdmin] refused — can't change your own");
+    return;
+  }
+
+  const target = await getMember(targetId);
+  if (!target || target.removed_at) return;
+
+  const { error } = await db()
+    .from("members")
+    .update({ is_admin: makeAdmin })
+    .eq("id", targetId);
+
+  if (error) {
+    console.error("[setAdmin] failed", error.message);
+    return;
+  }
+
+  if (makeAdmin) {
+    await notifyMembers([targetId], {
+      title: "You're an organiser now",
+      body: `${actor.display_name} gave you organiser rights — you can edit or cancel any game and manage the players list.`,
+      url: "/players",
+    });
+  }
+
+  console.log(`[setAdmin] done — ${target.display_name} admin=${makeAdmin}`);
+  revalidatePath("/players");
+  revalidatePath("/me");
+}
+
+/**
+ * Take someone out of the group.
+ *
+ * Nothing is actually deleted: the row is marked removed so that games they
+ * played in still show their name. What changes is that they vanish from the
+ * players list and the "add a player" search, they're pulled out of anything
+ * still to come, they stop getting notifications, and their phone is signed
+ * out. If they still have the group code they can join again.
+ */
+export async function removeMember(formData: FormData): Promise<void> {
+  console.log("[removeMember] start");
+  const actor = await requireMember();
+  if (!actor.is_admin) {
+    console.log("[removeMember] not an organiser");
+    return;
+  }
+
+  const targetId = String(formData.get("memberId") ?? "");
+
+  if (targetId === actor.id) {
+    console.log("[removeMember] refused — can't remove yourself");
+    return;
+  }
+
+  const target = await getMember(targetId);
+  if (!target || target.removed_at) return;
+
+  // Removing an organiser by accident would be hard to undo, so make it two
+  // deliberate steps: take their rights away first.
+  if (target.is_admin) {
+    console.log("[removeMember] refused — target is an organiser");
+    return;
+  }
+
+  // Pull them out of anything still to come. Past games are left exactly as
+  // they were.
+  const { data: upcomingRows, error: upcomingError } = await db()
+    .from("games")
+    .select("id, starts_at, venue")
+    .gte("ends_at", new Date().toISOString())
+    .neq("status", "cancelled");
+
+  if (upcomingError) {
+    console.error("[removeMember] could not load games", upcomingError.message);
+    return;
+  }
+
+  const upcoming = upcomingRows as { id: string; starts_at: string; venue: string }[];
+
+  if (upcoming.length) {
+    const { data: theirRows, error: rowsError } = await db()
+      .from("game_players")
+      .select("id, game_id")
+      .in("game_id", upcoming.map((g) => g.id))
+      .eq("member_id", targetId);
+
+    if (rowsError) {
+      console.error("[removeMember] could not load their games", rowsError.message);
+      return;
+    }
+
+    for (const row of theirRows as { id: string; game_id: string }[]) {
+      const game = upcoming.find((g) => g.id === row.game_id);
+      const { promoted } = await removePlayerRow(row.game_id, row.id);
+
+      await logEvent(
+        row.game_id,
+        actor.id,
+        "left",
+        `${actor.display_name} removed ${target.display_name} from the group`,
+      );
+
+      if (promoted && game) {
+        await notifyMembers([promoted.member_id], {
+          title: "You're in",
+          body: `A spot opened up — ${formatShortDate(game.starts_at)}, ${formatTime(game.starts_at)} at ${game.venue}.`,
+          url: `/game/${row.game_id}`,
+        });
+      }
+
+      revalidatePath(`/game/${row.game_id}`);
+    }
+  }
+
+  // Stop the notifications landing on a phone that no longer has access.
+  await db().from("push_subscriptions").delete().eq("member_id", targetId);
+
+  const { error } = await db()
+    .from("members")
+    .update({ removed_at: new Date().toISOString(), removed_by: actor.id })
+    .eq("id", targetId);
+
+  if (error) {
+    console.error("[removeMember] failed", error.message);
+    return;
+  }
+
+  console.log("[removeMember] done —", target.display_name);
+  revalidatePath("/players");
+  revalidatePath("/");
 }
 
 /* -------------------------------------------------------------------------- */

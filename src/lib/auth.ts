@@ -17,8 +17,9 @@ export const COLOURS = [
 ] as const;
 
 /**
- * Who is making this request? Returns null if they haven't joined yet or the
- * cookie has been tampered with.
+ * Who is making this request? Returns null if they haven't joined yet, the
+ * cookie has been tampered with, or an organiser has removed them from the
+ * group — in which case they land back on /join like anybody else.
  */
 export async function getCurrentMember(): Promise<Member | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -29,6 +30,7 @@ export async function getCurrentMember(): Promise<Member | null> {
     .from("members")
     .select("*")
     .eq("id", memberId)
+    .is("removed_at", null)
     .maybeSingle();
 
   if (error) {

@@ -131,8 +131,10 @@ export default function JoinForm({ next }: { next: string }) {
       {asking && state.clash && (
         <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
           <p className="text-[15px] leading-relaxed">
-            <span className="font-semibold">{state.clash}</span> is already in
-            the group. Is that you?
+            <span className="font-semibold">{state.clash}</span>{" "}
+            {state.clashRemoved
+              ? "was in the group before. Is that you?"
+              : "is already in the group. Is that you?"}
           </p>
           <ConfirmButtons existingName={state.clash} />
           <button

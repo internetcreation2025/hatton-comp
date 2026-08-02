@@ -14,7 +14,11 @@ export default async function PlayersPage() {
   if (!me) redirect("/join");
 
   const [membersResult, playedResult] = await Promise.all([
-    db().from("members").select("*").order("display_name"),
+    db()
+      .from("members")
+      .select("*")
+      .is("removed_at", null)
+      .order("display_name"),
     db().from("game_players").select("member_id").eq("status", "playing"),
   ]);
 
@@ -57,6 +61,7 @@ export default async function PlayersPage() {
             entry={entry}
             isYou={entry.id === me.id}
             canEdit={me.is_admin || entry.id === me.id}
+            canManage={me.is_admin && entry.id !== me.id}
           />
         ))}
       </ul>
@@ -65,6 +70,15 @@ export default async function PlayersPage() {
         Numbers are optional and only visible to people who have the group code.
         Leave the box blank to remove yours at any time.
       </p>
+
+      {me.is_admin && (
+        <p className="mt-3 px-0.5 text-[13px] leading-relaxed text-muted">
+          Organisers can edit or cancel any game, fill in anyone&apos;s number,
+          remove people from the group, and make other organisers. Removing
+          someone takes them out of the list and any games still to come — games
+          they&apos;ve already played keep their name.
+        </p>
+      )}
     </AppShell>
   );
 }

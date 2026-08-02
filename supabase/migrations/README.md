@@ -12,8 +12,12 @@ via the Supabase MCP tools, in this order:
    from `anon` and `authenticated`, so they aren't listed as public RPC
    endpoints.
 
-The full SQL for each is in the project's migration history in the Supabase
-dashboard: Database → Migrations.
 4. `prevent_overlapping_games_at_hatton` — an exclusion constraint so two
    non-cancelled games at Hatton can never overlap in time. Hatton has one
    court. Other venues are unaffected.
+5. `add_member_removal` — `members.removed_at` / `members.removed_by`, plus a
+   partial index on the active ones. Removing somebody is a soft delete: the
+   row stays so that games they already played still show their name.
+
+The full SQL for each is in the project's migration history in the Supabase
+dashboard: Database → Migrations.
