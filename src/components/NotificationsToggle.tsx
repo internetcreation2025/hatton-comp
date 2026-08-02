@@ -35,6 +35,7 @@ export default function NotificationsToggle() {
   const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   useEffect(() => {
     async function check() {
@@ -121,6 +122,26 @@ export default function NotificationsToggle() {
     }
   }
 
+  async function sendTest() {
+    setBusy(true);
+    setTestResult(null);
+
+    try {
+      const response = await fetch("/api/push/test", { method: "POST" });
+      const result = (await response.json()) as { devices?: number };
+
+      setTestResult(
+        result.devices
+          ? `Sent to ${result.devices} device${result.devices === 1 ? "" : "s"}. It should arrive in a few seconds — if the app is open in front of you, check your lock screen or notification centre.`
+          : "No devices are signed up yet. Turn notifications off and on again.",
+      );
+    } catch {
+      setTestResult("Couldn't send it. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (status === "loading") {
     return <p className="text-[15px] text-muted">Checking…</p>;
   }
@@ -188,6 +209,24 @@ export default function NotificationsToggle() {
           ? "You'll be told when a game is set up, fills up, loses a player, or is about to start."
           : "Get a nudge when a game is set up or a spot opens."}
       </p>
+
+      {on && (
+        <>
+          <button
+            type="button"
+            onClick={sendTest}
+            disabled={busy}
+            className="mt-3 w-full rounded-xl border border-line px-4 py-3 text-[15px] font-medium disabled:opacity-60"
+          >
+            {busy ? "Sending…" : "Send me a test notification"}
+          </button>
+          {testResult && (
+            <p className="mt-2 text-[13px] leading-relaxed text-muted">
+              {testResult}
+            </p>
+          )}
+        </>
+      )}
 
       {error && (
         <p role="alert" className="mt-2 text-sm text-danger">
