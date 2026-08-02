@@ -55,6 +55,13 @@ export async function joinGroup(
     return { error: "That name is too long." };
   }
 
+  // Optional, but asked for while they're already filling in a form — a number
+  // added later is a number never added.
+  const phone = tidyPhone(String(formData.get("phone") ?? ""));
+  if (phone.length > 0 && !looksLikeAPhoneNumber(phone)) {
+    return { error: "That doesn't look like a phone number. Leave it blank if you'd rather not." };
+  }
+
   const { data: existing, error: lookupError } = await db()
     .from("members")
     .select("*")
@@ -76,6 +83,11 @@ export async function joinGroup(
     return { clash: member.display_name };
   }
 
+  // Signing back in on a new phone and giving a number they didn't have before.
+  if (member && phone && !member.phone) {
+    await db().from("members").update({ phone }).eq("id", member.id);
+  }
+
   if (!member) {
     const { count } = await db()
       .from("members")
@@ -85,7 +97,7 @@ export async function joinGroup(
 
     const { data: created, error: createError } = await db()
       .from("members")
-      .insert({ display_name: name, colour })
+      .insert({ display_name: name, colour, phone: phone || null })
       .select("*")
       .single();
 

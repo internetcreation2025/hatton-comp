@@ -103,6 +103,29 @@ export default function JoinForm({ next }: { next: string }) {
             type the same name to pick up where you left off.
           </p>
         </div>
+
+        <div>
+          <label
+            htmlFor="phone"
+            className="mb-1.5 block text-sm font-medium text-muted"
+          >
+            Your mobile{" "}
+            <span className="font-normal">(optional)</span>
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="07789 913706"
+            className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-[16px] outline-none placeholder:text-muted/60 focus:border-accent"
+          />
+          <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
+            Shown on the Players page so the group can reach you about a game.
+            Leave it blank if you&apos;d rather not — you can add it later.
+          </p>
+        </div>
       </div>
 
       {asking && state.clash && (

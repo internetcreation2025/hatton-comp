@@ -45,11 +45,20 @@ export async function requireMember(): Promise<Member> {
   return member;
 }
 
-/** Is the code someone typed on /join the right one? */
+/**
+ * Is the code someone typed on /join the right one?
+ *
+ * Deliberately forgiving: capitals don't matter, and neither do spaces. People
+ * copying "HattonCompetitors" out of a WhatsApp message will variously type it
+ * with a space in the middle, autocapitalised, or with a trailing space from a
+ * sloppy copy-and-paste. None of those are wrong answers.
+ */
 export function isGroupCodeCorrect(input: string): boolean {
   const expected = process.env.GROUP_CODE;
   if (!expected) throw new Error("GROUP_CODE is not set");
-  return input.trim().toLowerCase() === expected.trim().toLowerCase();
+
+  const normalise = (value: string) => value.replace(/\s+/g, "").toLowerCase();
+  return normalise(input) === normalise(expected);
 }
 
 /** Quietly record that someone has been active, for the members list. */
