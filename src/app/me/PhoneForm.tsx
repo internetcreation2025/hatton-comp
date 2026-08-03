@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { savePhone, type FormState } from "@/app/actions";
 
@@ -25,6 +25,8 @@ export default function PhoneForm({
   phone: string | null;
 }) {
   const [state, formAction] = useActionState<FormState, FormData>(savePhone, {});
+  // See NameForm — React empties the form after the action runs.
+  const [value, setValue] = useState(phone ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
@@ -35,7 +37,8 @@ export default function PhoneForm({
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          defaultValue={phone ?? ""}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
           placeholder="07789 913706"
           className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] outline-none placeholder:text-muted/60 focus:border-accent"
         />

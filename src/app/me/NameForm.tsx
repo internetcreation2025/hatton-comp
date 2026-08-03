@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateName, type FormState } from "@/app/actions";
 
@@ -22,6 +22,9 @@ export default function NameForm({ currentName }: { currentName: string }) {
     updateName,
     {},
   );
+  // Held in state so a rejected name isn't wiped: React empties the form once
+  // the action has run.
+  const [name, setName] = useState(currentName);
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
@@ -30,7 +33,8 @@ export default function NameForm({ currentName }: { currentName: string }) {
           name="name"
           type="text"
           required
-          defaultValue={currentName}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
           className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] outline-none focus:border-accent"
         />
         <Submit />

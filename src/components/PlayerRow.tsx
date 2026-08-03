@@ -74,6 +74,9 @@ export default function PlayerRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  // React empties the form after the action runs, so a rejected number would
+  // vanish from the box it was typed into.
+  const [draftPhone, setDraftPhone] = useState(entry.phone ?? "");
   const [state, formAction] = useActionState<FormState, FormData>(savePhone, {});
 
   const [lastState, setLastState] = useState(state);
@@ -227,7 +230,8 @@ export default function PlayerRow({
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              defaultValue={entry.phone ?? ""}
+              value={draftPhone}
+              onChange={(event) => setDraftPhone(event.target.value)}
               placeholder="07789 913706"
               className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] outline-none placeholder:text-muted/60 focus:border-accent"
             />

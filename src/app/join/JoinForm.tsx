@@ -35,8 +35,15 @@ function ConfirmButtons({ existingName }: { existingName: string }) {
 
 export default function JoinForm({ next }: { next: string }) {
   const [state, formAction] = useActionState<FormState, FormData>(joinGroup, {});
-  const [name, setName] = useState("");
   const nameField = useRef<HTMLInputElement>(null);
+
+  // Every box is held in state on purpose. React empties a form once its action
+  // has run, so anything left uncontrolled is wiped the moment we come back to
+  // ask "is that you?" — and an empty box that's both required and hidden makes
+  // the browser refuse to submit, with no way to say why.
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [phone, setPhone] = useState("");
 
   // A fresh state object means the action just came back.
   const [lastState, setLastState] = useState(state);
@@ -70,11 +77,15 @@ export default function JoinForm({ next }: { next: string }) {
             id="code"
             name="code"
             type="text"
-            required
+            // Only required while it's on screen. A required box the browser
+            // can't show you is a dead end.
+            required={!asking}
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
             className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-[16px] outline-none focus:border-accent"
           />
         </div>
@@ -91,7 +102,7 @@ export default function JoinForm({ next }: { next: string }) {
             ref={nameField}
             name="name"
             type="text"
-            required
+            required={!asking}
             autoComplete="name"
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -118,6 +129,8 @@ export default function JoinForm({ next }: { next: string }) {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
             placeholder="07789 913706"
             className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-[16px] outline-none placeholder:text-muted/60 focus:border-accent"
           />

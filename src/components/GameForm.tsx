@@ -46,8 +46,17 @@ export default function GameForm({
   showPlayingToggle?: boolean;
 }) {
   const [state, formAction] = useActionState<FormState, FormData>(action, {});
+
+  // All held in state: React empties the form once the action has run, so
+  // anything left uncontrolled is thrown away exactly when we're telling
+  // someone to pick a different time and they need what they typed back.
   const [duration, setDuration] = useState(defaults.duration);
   const [venue, setVenue] = useState(defaults.venue);
+  const [date, setDate] = useState(defaults.date);
+  const [time, setTime] = useState(defaults.time);
+  const [court, setCourt] = useState(defaults.court);
+  const [notes, setNotes] = useState(defaults.notes);
+  const [playing, setPlaying] = useState(true);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -63,7 +72,8 @@ export default function GameForm({
             name="date"
             type="date"
             required
-            defaultValue={defaults.date}
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
             className={fieldClass}
           />
         </div>
@@ -77,7 +87,8 @@ export default function GameForm({
             type="time"
             required
             step={300}
-            defaultValue={defaults.time}
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
             className={fieldClass}
           />
         </div>
@@ -143,7 +154,8 @@ export default function GameForm({
           id="court"
           name="court"
           type="text"
-          defaultValue={defaults.court}
+          value={court}
+          onChange={(event) => setCourt(event.target.value)}
           placeholder="e.g. 2"
           className={fieldClass}
         />
@@ -157,7 +169,8 @@ export default function GameForm({
           id="notes"
           name="notes"
           rows={3}
-          defaultValue={defaults.notes}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
           placeholder="Anything the others should know"
           className={`${fieldClass} resize-none`}
         />
@@ -168,7 +181,8 @@ export default function GameForm({
           <input
             type="checkbox"
             name="playing"
-            defaultChecked
+            checked={playing}
+            onChange={(event) => setPlaying(event.target.checked)}
             className="mt-0.5 h-5 w-5 accent-[var(--accent)]"
           />
           <span className="text-[15px] leading-snug">
