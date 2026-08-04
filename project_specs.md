@@ -74,7 +74,8 @@ Chosen approach: **group code + pick your name.**
 ### Public (not signed in)
 | Page | What's on it |
 |---|---|
-| `/join` | Group code box → name box → done. The only page a stranger can reach. |
+| `/join` | Group code box → name box → optional mobile → done. |
+| `/install` | How to put it on your home screen, showing only the steps for the phone you're holding. No group code needed — this is the link that goes in the WhatsApp chat. On iPhone it's the Safari share-sheet route (and a "open this in Safari" note for anyone in Chrome, which can't install at all). On Android it's Chrome's one-tap install. **Anyone on Android but not in Chrome — Samsung Internet, Firefox, Edge — is steered to Chrome**, because those browsers build the home-screen app themselves and Android's Play Protect refuses to install what they produce ("Unsafe app blocked … built for an older version of Android"). Chrome has Google build it instead, which installs cleanly. Nothing about this is fixable from the site. |
 
 ### Signed in
 | Page | What's on it |
